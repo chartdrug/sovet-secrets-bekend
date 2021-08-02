@@ -1,0 +1,3 @@
+DROP TABLE album;
+DROP TABLE users;
+DROP TABLE antro;
