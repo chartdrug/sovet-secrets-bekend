@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"net/http"
 	"strings"
 )
 
@@ -12,10 +14,13 @@ import (
 func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routing.Handler, logger log.Logger) {
 	res := resource{service, logger}
 
+	r.Post("/api/createprofile", res.create)
+
 	r.Use(authHandler)
 
 	// the following endpoints require a valid JWT
 	r.Get("/api/profile", res.get)
+
 }
 
 type resource struct {
@@ -50,4 +55,25 @@ func GetValue(service Service, logger log.Logger, c *routing.Context) string {
 	res := resource{service, logger}
 	a := res.get(c)
 	return a.Error()
+}
+
+func (r resource) create(c *routing.Context) error {
+	var input CreateUser
+	if err := c.Read(&input); err != nil {
+		r.logger.With(c.Request.Context()).Info(err)
+		return errors.BadRequest("")
+	}
+
+	user1, err1 := r.service.GetByLogin(c.Request.Context(), input.Login)
+
+	if err1 == nil && user1.Login == input.Login {
+		return errors.BadRequest("login exists")
+	}
+
+	user, err := r.service.Create(c.Request.Context(), input)
+	if err != nil {
+		return err
+	}
+
+	return c.WriteWithStatus(user, http.StatusCreated)
 }

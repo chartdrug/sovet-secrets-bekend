@@ -2,6 +2,7 @@ package profile
 
 import (
 	"context"
+	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/dbcontext"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
@@ -9,6 +10,8 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, id string) (entity.Users, error)
+	GetByLogin(ctx context.Context, login string) (entity.Users, error)
+	Create(ctx context.Context, album entity.Users) error
 }
 
 type repository struct {
@@ -23,5 +26,15 @@ func NewRepository(db *dbcontext.DB, logger log.Logger) Repository {
 func (r repository) Get(ctx context.Context, id string) (entity.Users, error) {
 	var user entity.Users
 	err := r.db.With(ctx).Select().Model(id, &user)
+	return user, err
+}
+
+func (r repository) Create(ctx context.Context, antro entity.Users) error {
+	return r.db.With(ctx).Model(&antro).Insert()
+}
+
+func (r repository) GetByLogin(ctx context.Context, login string) (entity.Users, error) {
+	var user entity.Users
+	err := r.db.With(ctx).Select().Where(dbx.HashExp{"login": login}).One(&user)
 	return user, err
 }

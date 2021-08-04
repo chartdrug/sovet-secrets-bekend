@@ -5,7 +5,8 @@ import "time"
 // User represents a user.
 type Users struct {
 	ID             string
-	Login          string    `json:"login"`
+	Login          string `json:"login"`
+	Passwd         string
 	Email          string    `json:"email"`
 	DateRegistered time.Time `json:"date_registered"`
 	DateLastlogin  time.Time
