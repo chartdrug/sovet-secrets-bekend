@@ -17,7 +17,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	// the following endpoints require a valid JWT
 	r.Get("/api/injections", res.get)
 	//r.Delete("/api/antros/<id>", res.delete)
-	//r.Post("/api/antros", res.create)
+	//r.Post("/api/injections", res.create)
 }
 
 type resource struct {

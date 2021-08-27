@@ -50,18 +50,36 @@ CREATE TABLE antro (
 ALTER TABLE ONLY antro
     ADD CONSTRAINT antro_pkey PRIMARY KEY (id);
 
-CREATE TABLE injection (
-       id UUID PRIMARY KEY,
-       owner UUID NOT NULL,
-       dt DATETIME NOT NULL DEFAULT CURRENT_DATE,
-       course UUID DEFAULT NULL,
-       what CHAR(1) NOT NULL DEFAULT '?',
-       dose DOUBLE PRECISION[],
-       drug UUID[],
-       volume DOUBLE PRECISION[],
-       solvent CHAR(1)[],
-       points INTEGER[],
-       zerodt DATETIME[],
-       hashid UUID DEFAULT NULL
+CREATE TABLE injection
+(
+    id uuid NOT NULL,
+    owner uuid NOT NULL,
+    dt timestamp without time zone NOT NULL DEFAULT ('now'::text)::date,
+    course uuid,
+    what character(1) COLLATE pg_catalog."default" NOT NULL DEFAULT '?'::bpchar,
+    /*dose double precision[],
+    drug uuid[],
+    volume double precision[],
+    solvent character(1)[] COLLATE pg_catalog."default",
+    points integer[],
+    zerodt timestamp without time zone,
+    hashid uuid,
+    cutoff integer[],*/
+    CONSTRAINT injection_pkey PRIMARY KEY (id)
 );
+
+CREATE TABLE injection_dose
+(
+    id uuid NOT NULL,
+    id_injection uuid NOT NULL,
+    dose double precision,
+    drug uuid,
+    volume double precision,
+    solvent character(1) COLLATE pg_catalog."default",
+    points integer,
+    CONSTRAINT injection_dose_pkey PRIMARY KEY (id)
+);
+
+
+
 CREATE INDEX idx_injection_owner ON injection(owner);

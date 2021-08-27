@@ -16,6 +16,7 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/internal/config"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/healthcheck"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/injections"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/profile"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/accesslog"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/dbcontext"
@@ -106,6 +107,11 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, cfg *config.Config) http.
 
 	antros.RegisterHandlers(rg.Group(""),
 		antros.NewService(antros.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
+
+	injections.RegisterHandlers(rg.Group(""),
+		injections.NewService(injections.NewRepository(db, logger), logger),
 		authHandler, logger,
 	)
 

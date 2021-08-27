@@ -19,16 +19,37 @@ type Injection struct {
 	entity.Injection
 }
 
-type CreateAntroRequest struct {
-	Dt                time.Time `json:"dt"`
-	General_age       int       `json:"general_age"`
-	General_hip       float32   `json:"general_hip"`
-	General_height    float32   `json:"general_height"`
-	General_leglen    float32   `json:"general_leglen"`
-	General_weight    float32   `json:"general_weight"`
-	General_handlen   float32   `json:"general_handlen"`
-	General_shoulders float32   `json:"general_shoulders"`
-	Notes             string    `json:"notes"`
+type Injection_Dose struct {
+	entity.Injection_Dose
+}
+
+type CreateInjectionsRequest struct {
+	Dt      time.Time       `json:"dt"`
+	Course  string          `json:"course"`
+	What    string          `json:"what"`
+	Dose    map[float32]int `json:"dose"`
+	Drug    map[string]int  `json:"drug"`
+	Volume  map[float32]int `json:"volume"`
+	Solvent map[string]int  `json:"solvent"`
+	Points  map[int]int     `json:"points"`
+	/*
+	   	CREATE TABLE public.injection
+	   (
+	   	id uuid NOT NULL,
+	   	owner uuid NOT NULL,
+	   	dt timestamp without time zone NOT NULL DEFAULT ('now'::text)::date,
+	   	course uuid,
+	   	what character(1) COLLATE pg_catalog."default" NOT NULL DEFAULT '?'::bpchar,
+	   	dose double precision[],
+	   	drug uuid[],
+	   	volume double precision[],
+	   	solvent character(1)[] COLLATE pg_catalog."default",
+	   	points integer[],
+	   	zerodt timestamp without time zone,
+	   	hashid uuid,
+	   	cutoff integer[],
+	   	CONSTRAINT injection_pkey PRIMARY KEY (id)
+	   )*/
 }
 
 type service struct {
@@ -49,6 +70,12 @@ func (s service) Get(ctx context.Context, owner string) ([]Injection, error) {
 	}
 	result := []Injection{}
 	for _, item := range items {
+		itemsDose, errDose := s.repo.GetDose(ctx, item.ID)
+		if errDose != nil {
+			return nil, errDose
+		}
+		//resultDose := []Injection_Dose{}
+		item.Injection_Dose = itemsDose
 		result = append(result, Injection{item})
 	}
 	return result, nil

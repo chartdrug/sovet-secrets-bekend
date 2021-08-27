@@ -10,6 +10,7 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, id string) ([]entity.Injection, error)
+	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
 	//GetOne(ctx context.Context, id string) (entity.Injection, error)
 	//Delete(ctx context.Context, id string) error
 	//Create(ctx context.Context, album entity.Injection) error
@@ -28,6 +29,12 @@ func (r repository) Get(ctx context.Context, owner string) ([]entity.Injection, 
 	var injection []entity.Injection
 	err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).All(&injection)
 	return injection, err
+}
+
+func (r repository) GetDose(ctx context.Context, id_injection string) ([]entity.Injection_Dose, error) {
+	var injection_dose []entity.Injection_Dose
+	err := r.db.With(ctx).Select().Where(dbx.HashExp{"id_injection": id_injection}).All(&injection_dose)
+	return injection_dose, err
 }
 
 func (r repository) GetOne(ctx context.Context, id string) (entity.Injection, error) {

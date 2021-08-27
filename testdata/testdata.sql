@@ -27,3 +27,18 @@ VALUES ('f0f789ce-e8c0-11eb-9a03-0242ac130003', '3a56fd3a-e7ee-11eb-ba80-0242ac1
         current_date - interval '1 days' * 3, 31,
         0, 190, 0, 100, 1, 2,
         'test1', true, 0.7973375453893254, 99.20266245461067, 2512.7775090195905);
+
+
+INSERT INTO public.injection(
+    id, owner, what)
+VALUES ('3a56fd3a-e7ee-22eb-ba80-0242ac130004', '3a56fd3a-e7ee-11eb-ba80-0242ac130004', 1);
+INSERT INTO public.injection_dose(
+    id, id_injection,
+    dose, drug, volume, solvent)
+VALUES ('3a56fd3a-e7ee-33eb-ba80-0242ac130004', '3a56fd3a-e7ee-22eb-ba80-0242ac130004',
+        1, '00000002-0003-0000-0000-ff00ff00ff00', 1, 'O');
+INSERT INTO public.injection_dose(
+    id, id_injection,
+    dose, drug, volume, solvent)
+VALUES ('3a56fd3a-e7ee-44eb-ba80-0242ac130004', '3a56fd3a-e7ee-22eb-ba80-0242ac130004',
+        1, '00000006-0003-0000-0000-ff00ff00ff00', 5, 'L');
