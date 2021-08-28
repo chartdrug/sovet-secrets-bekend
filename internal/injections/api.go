@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"net/http"
 	"strings"
 )
 
@@ -17,7 +19,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	// the following endpoints require a valid JWT
 	r.Get("/api/injections", res.get)
 	//r.Delete("/api/antros/<id>", res.delete)
-	//r.Post("/api/injections", res.create)
+	r.Post("/api/injections", res.create)
 }
 
 type resource struct {
@@ -36,12 +38,42 @@ func (r resource) get(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		profile, err := r.service.Get(c.Request.Context(), claims["id"].(string))
+		injection, err := r.service.Get(c.Request.Context(), claims["id"].(string))
 		if err != nil {
 			return err
 		}
 
-		return c.Write(profile)
+		return c.Write(injection)
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) create(c *routing.Context) error {
+	var input CreateInjectionsRequest
+	if err := c.Read(&input); err != nil {
+		r.logger.With(c.Request.Context()).Info(err)
+		return errors.BadRequest("")
+	}
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+
+		injection, err := r.service.Create(c.Request.Context(), input, claims["id"].(string))
+		if err != nil {
+			return err
+		}
+
+		return c.WriteWithStatus(injection, http.StatusCreated)
+
 	} else {
 		return err
 	}

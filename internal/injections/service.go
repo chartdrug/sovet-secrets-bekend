@@ -4,17 +4,19 @@ import (
 	"context"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
-	"time"
 )
 
 // Service encapsulates usecase logic for albums.
 type Service interface {
-	Get(ctx context.Context, owner string) ([]Injection, error)
+	Get(ctx context.Context, owner string) ([]InjectionModel, error)
 	//Delete(ctx context.Context, id string) (Injection, error)
-	//Create(ctx context.Context, input CreateAntroRequest, owner string) (Injection, error)
+	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
 }
 
 // Album represents the data about an album.
+type InjectionModel struct {
+	entity.InjectionModel
+}
 type Injection struct {
 	entity.Injection
 }
@@ -24,32 +26,7 @@ type Injection_Dose struct {
 }
 
 type CreateInjectionsRequest struct {
-	Dt      time.Time       `json:"dt"`
-	Course  string          `json:"course"`
-	What    string          `json:"what"`
-	Dose    map[float32]int `json:"dose"`
-	Drug    map[string]int  `json:"drug"`
-	Volume  map[float32]int `json:"volume"`
-	Solvent map[string]int  `json:"solvent"`
-	Points  map[int]int     `json:"points"`
-	/*
-	   	CREATE TABLE public.injection
-	   (
-	   	id uuid NOT NULL,
-	   	owner uuid NOT NULL,
-	   	dt timestamp without time zone NOT NULL DEFAULT ('now'::text)::date,
-	   	course uuid,
-	   	what character(1) COLLATE pg_catalog."default" NOT NULL DEFAULT '?'::bpchar,
-	   	dose double precision[],
-	   	drug uuid[],
-	   	volume double precision[],
-	   	solvent character(1)[] COLLATE pg_catalog."default",
-	   	points integer[],
-	   	zerodt timestamp without time zone,
-	   	hashid uuid,
-	   	cutoff integer[],
-	   	CONSTRAINT injection_pkey PRIMARY KEY (id)
-	   )*/
+	entity.InjectionModel
 }
 
 type service struct {
@@ -63,20 +40,71 @@ func NewService(repo Repository, logger log.Logger) Service {
 }
 
 // Get returns the album with the specified the album ID.
-func (s service) Get(ctx context.Context, owner string) ([]Injection, error) {
+func (s service) Get(ctx context.Context, owner string) ([]InjectionModel, error) {
 	items, err := s.repo.Get(ctx, owner)
 	if err != nil {
 		return nil, err
 	}
-	result := []Injection{}
+	result := []InjectionModel{}
 	for _, item := range items {
 		itemsDose, errDose := s.repo.GetDose(ctx, item.ID)
 		if errDose != nil {
 			return nil, errDose
 		}
 		//resultDose := []Injection_Dose{}
-		item.Injection_Dose = itemsDose
-		result = append(result, Injection{item})
+		//item.Injection_Dose = itemsDose
+		resultModel := InjectionModel{}
+		resultModel.Injection = item
+		resultModel.Injection_Dose = itemsDose
+		result = append(result, resultModel)
 	}
 	return result, nil
+}
+
+func (s service) GetOne(ctx context.Context, id string) (InjectionModel, error) {
+	injection, err := s.repo.GetOne(ctx, id)
+	if err != nil {
+		return InjectionModel{}, err
+	}
+
+	itemsDose, errDose := s.repo.GetDose(ctx, injection.ID)
+	if errDose != nil {
+		return InjectionModel{}, errDose
+	}
+
+	resultModel := InjectionModel{}
+	resultModel.Injection = injection
+	resultModel.Injection_Dose = itemsDose
+
+	return resultModel, nil
+}
+
+func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner string) (InjectionModel, error) {
+
+	id := entity.GenerateID()
+	// записфваем сначало применение доз
+	for _, item := range req.Injection_Dose {
+		err := s.repo.CreateInjectionDose(ctx, entity.Injection_Dose{
+			ID:           entity.GenerateID(),
+			Id_injection: id,
+			Dose:         item.Dose,
+			Drug:         item.Drug,
+			Volume:       item.Volume,
+			Solvent:      item.Solvent,
+		})
+		if err != nil {
+			return InjectionModel{}, err
+		}
+	}
+	// создаём сущность самого применения
+	err := s.repo.CreateInjection(ctx, entity.Injection{
+		ID:    id,
+		Owner: owner,
+		Dt:    req.Injection.Dt,
+		What:  req.Injection.What,
+	})
+	if err != nil {
+		return InjectionModel{}, err
+	}
+	return s.GetOne(ctx, id)
 }

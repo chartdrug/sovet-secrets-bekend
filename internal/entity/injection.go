@@ -18,7 +18,11 @@ type Injection struct {
 	Owner string    `json:"owner"`
 	Dt    time.Time `json:"dt"`
 	//Course  string           `json:"course"`
-	What           string           `json:"what"`
+	What string `json:"what"`
+}
+
+type InjectionModel struct {
+	Injection      Injection        `json:"injection"`
 	Injection_Dose []Injection_Dose `json:"injection_dose"`
 }
 

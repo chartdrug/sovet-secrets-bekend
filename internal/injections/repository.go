@@ -11,9 +11,10 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id string) ([]entity.Injection, error)
 	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
-	//GetOne(ctx context.Context, id string) (entity.Injection, error)
+	GetOne(ctx context.Context, id string) (entity.Injection, error)
 	//Delete(ctx context.Context, id string) error
-	//Create(ctx context.Context, album entity.Injection) error
+	CreateInjection(ctx context.Context, injection entity.Injection) error
+	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 }
 
 type repository struct {
@@ -51,6 +52,10 @@ func (r repository) Delete(ctx context.Context, id string) error {
 	return r.db.With(ctx).Model(&injection).Delete()
 }
 
-func (r repository) Create(ctx context.Context, injection entity.Injection) error {
+func (r repository) CreateInjection(ctx context.Context, injection entity.Injection) error {
 	return r.db.With(ctx).Model(&injection).Insert()
+}
+
+func (r repository) CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error {
+	return r.db.With(ctx).Model(&injectionDose).Insert()
 }
