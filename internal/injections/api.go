@@ -20,6 +20,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	r.Get("/api/injections", res.get)
 	//r.Delete("/api/antros/<id>", res.delete)
 	r.Post("/api/injections", res.create)
+	r.Delete("/api/injections/<id>", res.delete)
 }
 
 type resource struct {
@@ -73,6 +74,31 @@ func (r resource) create(c *routing.Context) error {
 		}
 
 		return c.WriteWithStatus(injection, http.StatusCreated)
+
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) delete(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+
+		injection, err := r.service.Delete(c.Request.Context(), c.Param("id"), claims["id"].(string))
+		if err != nil {
+			return err
+		}
+
+		return c.Write(injection)
 
 	} else {
 		return err

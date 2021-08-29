@@ -12,7 +12,7 @@ type Repository interface {
 	Get(ctx context.Context, id string) ([]entity.Injection, error)
 	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
 	GetOne(ctx context.Context, id string) (entity.Injection, error)
-	//Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 }

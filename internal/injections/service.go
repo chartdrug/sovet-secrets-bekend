@@ -3,13 +3,14 @@ package injections
 import (
 	"context"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 )
 
 // Service encapsulates usecase logic for albums.
 type Service interface {
 	Get(ctx context.Context, owner string) ([]InjectionModel, error)
-	//Delete(ctx context.Context, id string) (Injection, error)
+	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
 }
 
@@ -107,4 +108,21 @@ func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner 
 		return InjectionModel{}, err
 	}
 	return s.GetOne(ctx, id)
+}
+
+func (s service) Delete(ctx context.Context, id string, owner string) (InjectionModel, error) {
+	injection, err := s.GetOne(ctx, id)
+	if err != nil {
+		return InjectionModel{}, err
+	}
+
+	if injection.Injection.Owner != owner {
+		return InjectionModel{}, errors.NotFound("")
+	}
+
+	if err = s.repo.Delete(ctx, id); err != nil {
+		return InjectionModel{}, err
+	}
+
+	return injection, nil
 }

@@ -224,4 +224,13 @@ command,
 ./server -config=./config/prod.yml
 ```
 
+```shell
+chmod 400 sovet-ZEFNmBra.pem 
+
+docker save server:latest | bzip2 | ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247 docker load
+
+ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
+
+docker run -it --rm -d -p 8080:8080 --name server server
+
 ```
