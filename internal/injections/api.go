@@ -21,6 +21,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	//r.Delete("/api/antros/<id>", res.delete)
 	r.Post("/api/injections", res.create)
 	r.Delete("/api/injections/<id>", res.delete)
+	r.Delete("/api/injections/<id>/dose/<id_dose>", res.deleteDose)
 }
 
 type resource struct {
@@ -94,6 +95,31 @@ func (r resource) delete(c *routing.Context) error {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 
 		injection, err := r.service.Delete(c.Request.Context(), c.Param("id"), claims["id"].(string))
+		if err != nil {
+			return err
+		}
+
+		return c.Write(injection)
+
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) deleteDose(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+
+		injection, err := r.service.DeleteDose(c.Request.Context(), c.Param("id"), c.Param("id_dose"), claims["id"].(string))
 		if err != nil {
 			return err
 		}

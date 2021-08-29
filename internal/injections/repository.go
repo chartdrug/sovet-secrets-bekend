@@ -13,6 +13,8 @@ type Repository interface {
 	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
 	GetOne(ctx context.Context, id string) (entity.Injection, error)
 	Delete(ctx context.Context, id string) error
+	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
+	DeleteDose(ctx context.Context, idDose string) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 }
@@ -44,8 +46,22 @@ func (r repository) GetOne(ctx context.Context, id string) (entity.Injection, er
 	return injection, err
 }
 
+func (r repository) GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error) {
+	var injectionDose entity.Injection_Dose
+	err := r.db.With(ctx).Select().Model(id, &injectionDose)
+	return injectionDose, err
+}
+
 func (r repository) Delete(ctx context.Context, id string) error {
 	injection, err := r.GetOne(ctx, id)
+	if err != nil {
+		return err
+	}
+	return r.db.With(ctx).Model(&injection).Delete()
+}
+
+func (r repository) DeleteDose(ctx context.Context, idDose string) error {
+	injection, err := r.GetOneDose(ctx, idDose)
 	if err != nil {
 		return err
 	}

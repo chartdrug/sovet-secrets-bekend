@@ -11,6 +11,7 @@ import (
 type Service interface {
 	Get(ctx context.Context, owner string) ([]InjectionModel, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
+	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
 }
 
@@ -117,10 +118,51 @@ func (s service) Delete(ctx context.Context, id string, owner string) (Injection
 	}
 
 	if injection.Injection.Owner != owner {
-		return InjectionModel{}, errors.NotFound("")
+		return InjectionModel{}, errors.NotFound("The requested Injection was not found")
 	}
 
 	if err = s.repo.Delete(ctx, id); err != nil {
+		return InjectionModel{}, err
+	}
+
+	for _, item := range injection.Injection_Dose {
+		if err = s.repo.DeleteDose(ctx, item.ID); err != nil {
+			return InjectionModel{}, err
+		}
+	}
+
+	return injection, nil
+}
+
+func (s service) DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error) {
+	injection, err := s.GetOne(ctx, id)
+	if err != nil {
+		return InjectionModel{}, err
+	}
+
+	if injection.Injection.Owner != owner {
+		return InjectionModel{}, errors.NotFound("The requested Injection was not found")
+	}
+
+	var existsDose bool
+	existsDose = false
+
+	for _, item := range injection.Injection_Dose {
+		if item.ID == idDose {
+			existsDose = true
+		}
+	}
+
+	if !existsDose {
+		return InjectionModel{}, errors.NotFound("The requested Injection dose was not found")
+	}
+
+	if err = s.repo.DeleteDose(ctx, idDose); err != nil {
+		return InjectionModel{}, err
+	}
+
+	injection, err = s.GetOne(ctx, id)
+	if err != nil {
 		return InjectionModel{}, err
 	}
 
