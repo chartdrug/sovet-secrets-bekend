@@ -21,6 +21,7 @@ type Antro struct {
 }
 
 type CreateAntroRequest struct {
+	Id                string    `json:"id"`
 	Dt                time.Time `json:"dt"`
 	General_age       int       `json:"general_age"`
 	General_hip       float32   `json:"general_hip"`
@@ -83,14 +84,14 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 	result_nofat := rand.Float32()
 	result_energy := rand.Float32()
 
-	err := s.repo.Create(ctx, entity.Antro{
+	e := entity.Antro{
 		ID:                id,
 		Owner:             owner,
 		Dt:                req.Dt,
 		General_age:       40, //TODO сделать расчёт возраста
 		General_hip:       req.General_hip,
 		General_height:    req.General_height,
-		General_leglen:    req.General_height,
+		General_leglen:    req.General_leglen,
 		General_weight:    req.General_weight,
 		General_handlen:   req.General_handlen,
 		General_shoulders: req.General_shoulders,
@@ -98,9 +99,20 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 		Result_fat:        result_fat,
 		Result_nofat:      result_nofat,
 		Result_energy:     result_energy,
-	})
-	if err != nil {
-		return Antro{}, err
 	}
-	return s.GetOne(ctx, id)
+
+	if req.Id != "" {
+		e.ID = req.Id
+		err := s.repo.Update(ctx, e)
+		if err != nil {
+			return Antro{}, err
+		}
+	} else {
+		err := s.repo.Create(ctx, e)
+		if err != nil {
+			return Antro{}, err
+		}
+	}
+
+	return s.GetOne(ctx, e.ID)
 }
