@@ -10,6 +10,7 @@ import (
 // Service encapsulates usecase logic for albums.
 type Service interface {
 	Get(ctx context.Context, owner string) ([]InjectionModel, error)
+	Getinj(ctx context.Context, id string, owner string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
@@ -29,6 +30,20 @@ type Injection_Dose struct {
 
 type CreateInjectionsRequest struct {
 	entity.InjectionModel
+}
+
+type CreatePoints struct {
+	entity.PointsArray
+}
+
+type PointValue struct {
+	entity.PointValue
+}
+type Point struct {
+	entity.Point
+}
+type Points struct {
+	entity.PointsArray
 }
 
 type service struct {
@@ -63,11 +78,74 @@ func (s service) Get(ctx context.Context, owner string) ([]InjectionModel, error
 	return result, nil
 }
 
+func (s service) Getinj(ctx context.Context, id string, owner string) (Points, error) {
+	logger := s.logger.With(ctx, "id", id)
+
+	injection, err := s.GetOne(ctx, id)
+	if err != nil {
+		return Points{}, err
+	}
+
+	result := Points{}
+
+	for _, item := range injection.Injection_Dose {
+		result.Drugs = append(result.Drugs, item.Drug)
+	}
+
+	//TODO формула
+
+	for i := 0; i < 3; i++ {
+
+		point := entity.Point{}
+
+		point.Dt = 1625079780000 + (i * 100)
+
+		point.PointValues = append(point.PointValues, entity.PointValue{})
+
+		point.PointValues[0].Drug = "SUMM"
+		point.PointValues[0].C = 0
+		point.PointValues[0].CC = 0
+		point.PointValues[0].CCT = 0
+		point.PointValues[0].CT = 0
+
+		for _, item := range injection.Injection_Dose {
+
+			if item.Drug != "" {
+				logger.Infof("injection.Injection_Dose " + item.ID)
+			}
+
+			pValue := entity.PointValue{}
+
+			pValue.Drug = item.Drug
+			pValue.C = 0.0028981088472945313
+			pValue.CC = 0.0028981088472945313
+			pValue.CCT = 0.0009991573645662046
+			pValue.CT = 0.0028981088472945313
+
+			point.PointValues[0].C += pValue.C
+			point.PointValues[0].CC += pValue.CC
+			point.PointValues[0].CCT += pValue.CCT
+			point.PointValues[0].CT += pValue.CT
+
+			point.PointValues = append(point.PointValues, pValue)
+		}
+
+		result.Points = append(result.Points, point)
+
+	}
+
+	return result, nil
+}
+
 func (s service) GetOne(ctx context.Context, id string) (InjectionModel, error) {
+	logger := s.logger.With(ctx, "id", id)
+
 	injection, err := s.repo.GetOne(ctx, id)
 	if err != nil {
 		return InjectionModel{}, err
 	}
+
+	logger.Infof("GetOne sucsess " + injection.ID)
 
 	itemsDose, errDose := s.repo.GetDose(ctx, injection.ID)
 	if errDose != nil {

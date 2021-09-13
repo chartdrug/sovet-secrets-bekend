@@ -26,6 +26,23 @@ type InjectionModel struct {
 	Injection_Dose []Injection_Dose `json:"injection_dose"`
 }
 
+type PointValue struct {
+	Drug string  `json:"drug"`
+	C    float32 `json:"C"`
+	CC   float32 `json:"CC"`
+	CCT  float32 `json:"CCT"`
+	CT   float32 `json:"CT"`
+}
+
+type Point struct {
+	Dt          int          `json:"dt"`
+	PointValues []PointValue `json:"pointValues"`
+}
+type PointsArray struct {
+	Drugs  []string `json:"drugs"`
+	Points []Point  `json:"point"`
+}
+
 // GetID returns the user ID.
 func (u Injection) GetID() string {
 	return u.ID
