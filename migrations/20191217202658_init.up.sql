@@ -38,6 +38,24 @@ CREATE TABLE antro (
        general_handlen decimal,
        general_shoulders decimal,
 
+       --fold: {wrist: 2, forearm: 0, shoulder_front: 0, chest: 11, xiphoid: 0, belly: 12, anterrior_iliac: 0,…}
+       fold_anterrior_iliac decimal,
+       fold_back decimal,
+       fold_belly decimal, -- 12
+       fold_chest decimal, -- 11
+       fold_forearm decimal,
+       fold_hip_front decimal, -- 13
+       fold_hip_inside decimal,
+       fold_hip_rear decimal,
+       fold_hip_side decimal,
+       fold_scapula decimal,
+       fold_shin decimal,
+       fold_shoulder_front decimal,
+       fold_shoulder_rear decimal,
+       fold_waist_side decimal,
+       fold_wrist decimal,
+       fold_xiphoid decimal,
+
        --girth jsonb,
        --fold jsonb,
        notes text,
@@ -67,13 +85,14 @@ CREATE TABLE injection
     cutoff integer[],*/
     CONSTRAINT injection_pkey PRIMARY KEY (id)
 );
+CREATE INDEX idx_injection_owner ON injection(owner);
 
 CREATE TABLE injection_dose
 (
     id uuid NOT NULL,
     id_injection uuid NOT NULL,
     dose double precision,
-    drug uuid,
+    drug varchar(37),
     volume double precision,
     solvent character(1) COLLATE pg_catalog."default",
     points integer,
@@ -81,5 +100,3 @@ CREATE TABLE injection_dose
 );
 
 
-
-CREATE INDEX idx_injection_owner ON injection(owner);

@@ -27,7 +27,7 @@ func NewRepository(db *dbcontext.DB, logger log.Logger) Repository {
 
 func (r repository) Get(ctx context.Context, owner string) ([]entity.Antro, error) {
 	var antro []entity.Antro
-	err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).All(&antro)
+	err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).OrderBy("dt desc").All(&antro)
 	return antro, err
 }
 

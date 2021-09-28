@@ -30,7 +30,25 @@ type CreateAntroRequest struct {
 	General_weight    float32   `json:"general_weight"`
 	General_handlen   float32   `json:"general_handlen"`
 	General_shoulders float32   `json:"general_shoulders"`
-	Notes             string    `json:"notes"`
+
+	Fold_anterrior_iliac float32 `json:"fold_anterrior_iliac"`
+	Fold_back            float32 `json:"fold_back"`
+	Fold_belly           float32 `json:"fold_belly"`
+	Fold_chest           float32 `json:"fold_chest"`
+	Fold_forearm         float32 `json:"fold_forearm"`
+	Fold_hip_front       float32 `json:"fold_hip_front"`
+	Fold_hip_inside      float32 `json:"fold_hip_inside"`
+	Fold_hip_rear        float32 `json:"fold_hip_rear"`
+	Fold_hip_side        float32 `json:"fold_hip_side"`
+	Fold_scapula         float32 `json:"fold_scapula"`
+	Fold_shin            float32 `json:"fold_shin"`
+	Fold_shoulder_front  float32 `json:"fold_shoulder_front"`
+	Fold_shoulder_rear   float32 `json:"fold_shoulder_rear"`
+	Fold_waist_side      float32 `json:"fold_waist_side"`
+	Fold_wrist           float32 `json:"fold_wrist"`
+	Fold_xiphoid         float32 `json:"fold_xiphoid"`
+
+	Notes string `json:"notes"`
 }
 
 type service struct {
@@ -95,10 +113,28 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 		General_weight:    req.General_weight,
 		General_handlen:   req.General_handlen,
 		General_shoulders: req.General_shoulders,
-		Notes:             req.Notes,
-		Result_fat:        result_fat,
-		Result_nofat:      result_nofat,
-		Result_energy:     result_energy,
+
+		Fold_anterrior_iliac: req.Fold_anterrior_iliac,
+		Fold_back:            req.Fold_back,
+		Fold_belly:           req.Fold_belly,
+		Fold_chest:           req.Fold_chest,
+		Fold_forearm:         req.Fold_forearm,
+		Fold_hip_front:       req.Fold_hip_front,
+		Fold_hip_inside:      req.Fold_hip_inside,
+		Fold_hip_rear:        req.Fold_hip_rear,
+		Fold_hip_side:        req.Fold_hip_side,
+		Fold_scapula:         req.Fold_scapula,
+		Fold_shin:            req.Fold_shin,
+		Fold_shoulder_front:  req.Fold_shoulder_front,
+		Fold_shoulder_rear:   req.Fold_shoulder_rear,
+		Fold_waist_side:      req.Fold_waist_side,
+		Fold_wrist:           req.Fold_wrist,
+		Fold_xiphoid:         req.Fold_xiphoid,
+
+		Notes:         req.Notes,
+		Result_fat:    result_fat,
+		Result_nofat:  result_nofat,
+		Result_energy: result_energy,
 	}
 
 	if req.Id != "" {

@@ -231,6 +231,12 @@ docker save server:latest | bzip2 | ssh -i sovet-ZEFNmBra.pem centos@213.219.213
 
 ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
 
+docker stop server 
+
 docker run -it --rm -d -p 8080:8080 --name server server
+
+cd /etc/nginx
+sudo systemctl reload nginx
+
 
 ```

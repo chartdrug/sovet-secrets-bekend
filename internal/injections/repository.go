@@ -30,7 +30,7 @@ func NewRepository(db *dbcontext.DB, logger log.Logger) Repository {
 
 func (r repository) Get(ctx context.Context, owner string) ([]entity.Injection, error) {
 	var injection []entity.Injection
-	err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).All(&injection)
+	err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).OrderBy("dt desc").All(&injection)
 	return injection, err
 }
 

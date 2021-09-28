@@ -94,11 +94,21 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 	//TODO формула
 
+	//dtStart := injection.Injection.Dt
+
 	for i := 0; i < 3; i++ {
 
 		point := entity.Point{}
 
-		point.Dt = 1625079780000 + (i * 100)
+		point.Dt = 1625079780000 + (i * 10000000)
+
+		//point.Dt = int(dtStart + (i * 10000))
+		//var plussI int = i * 10
+		//point.Dt = int(dtStart.Add(time.Minute * plussI).Unix())
+
+		//next_time:= cur_time.Add(time.Hour * 2 + time.Minute * 1+ time.Second * 21)
+		//fmt.Printf("current time is :%s\n", cur_time )
+		//fmt.Printf("calculated time is :%s", next_time)
 
 		point.PointValues = append(point.PointValues, entity.PointValue{})
 
@@ -213,6 +223,7 @@ func (s service) Delete(ctx context.Context, id string, owner string) (Injection
 }
 
 func (s service) DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error) {
+	//logger := s.logger.With(ctx, "id", id)
 	injection, err := s.GetOne(ctx, id)
 	if err != nil {
 		return InjectionModel{}, err
@@ -242,6 +253,15 @@ func (s service) DeleteDose(ctx context.Context, id string, idDose string, owner
 	injection, err = s.GetOne(ctx, id)
 	if err != nil {
 		return InjectionModel{}, err
+	}
+	// если нет больше доз то удаляем всё связку
+
+	//logger.Infof(" len(injection.Injection_Dose)= " +  len(injection.Injection_Dose))
+	if len(injection.Injection_Dose) < 0 {
+		if err = s.repo.Delete(ctx, id); err != nil {
+			return InjectionModel{}, err
+		}
+		return InjectionModel{}, nil
 	}
 
 	return injection, nil
