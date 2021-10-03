@@ -240,3 +240,10 @@ sudo systemctl reload nginx
 
 
 ```
+
+стопнуть процесс
+sudo lsof -nP -i4TCP:8080 | grep LISTEN
+
+main    18975 kdereshev   12u  IPv6 0x4adf38b374f1995      0t0  TCP *:8080 (LISTEN) 
+
+sudo kill -9 18975

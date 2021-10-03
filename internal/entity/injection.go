@@ -7,9 +7,9 @@ import "time"
 type Injection_Dose struct {
 	ID           string  `json:"id"`
 	Id_injection string  `json:"id_injection"`
-	Dose         float32 `json:"dose"`
+	Dose         float64 `json:"dose"`
 	Drug         string  `json:"drug"`
-	Volume       float32 `json:"volume"`
+	Volume       float64 `json:"volume"`
 	Solvent      string  `json:"solvent"`
 }
 
@@ -28,10 +28,10 @@ type InjectionModel struct {
 
 type PointValue struct {
 	Drug string  `json:"drug"`
-	C    float32 `json:"C"`
-	CC   float32 `json:"CC"`
-	CCT  float32 `json:"CCT"`
-	CT   float32 `json:"CT"`
+	C    float64 `json:"C"`
+	CC   float64 `json:"CC"`
+	CCT  float64 `json:"CCT"`
+	CT   float64 `json:"CT"`
 }
 
 type Point struct {

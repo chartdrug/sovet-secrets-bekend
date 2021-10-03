@@ -3,8 +3,10 @@ package antros
 import (
 	"context"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
-	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -24,29 +26,29 @@ type CreateAntroRequest struct {
 	Id                string    `json:"id"`
 	Dt                time.Time `json:"dt"`
 	General_age       int       `json:"general_age"`
-	General_hip       float32   `json:"general_hip"`
-	General_height    float32   `json:"general_height"`
-	General_leglen    float32   `json:"general_leglen"`
-	General_weight    float32   `json:"general_weight"`
-	General_handlen   float32   `json:"general_handlen"`
-	General_shoulders float32   `json:"general_shoulders"`
+	General_hip       float64   `json:"general_hip"`
+	General_height    float64   `json:"general_height"`
+	General_leglen    float64   `json:"general_leglen"`
+	General_weight    float64   `json:"general_weight"`
+	General_handlen   float64   `json:"general_handlen"`
+	General_shoulders float64   `json:"general_shoulders"`
 
-	Fold_anterrior_iliac float32 `json:"fold_anterrior_iliac"`
-	Fold_back            float32 `json:"fold_back"`
-	Fold_belly           float32 `json:"fold_belly"`
-	Fold_chest           float32 `json:"fold_chest"`
-	Fold_forearm         float32 `json:"fold_forearm"`
-	Fold_hip_front       float32 `json:"fold_hip_front"`
-	Fold_hip_inside      float32 `json:"fold_hip_inside"`
-	Fold_hip_rear        float32 `json:"fold_hip_rear"`
-	Fold_hip_side        float32 `json:"fold_hip_side"`
-	Fold_scapula         float32 `json:"fold_scapula"`
-	Fold_shin            float32 `json:"fold_shin"`
-	Fold_shoulder_front  float32 `json:"fold_shoulder_front"`
-	Fold_shoulder_rear   float32 `json:"fold_shoulder_rear"`
-	Fold_waist_side      float32 `json:"fold_waist_side"`
-	Fold_wrist           float32 `json:"fold_wrist"`
-	Fold_xiphoid         float32 `json:"fold_xiphoid"`
+	Fold_anterrior_iliac float64 `json:"fold_anterrior_iliac"`
+	Fold_back            float64 `json:"fold_back"`
+	Fold_belly           float64 `json:"fold_belly"`
+	Fold_chest           float64 `json:"fold_chest"`
+	Fold_forearm         float64 `json:"fold_forearm"`
+	Fold_hip_front       float64 `json:"fold_hip_front"`
+	Fold_hip_inside      float64 `json:"fold_hip_inside"`
+	Fold_hip_rear        float64 `json:"fold_hip_rear"`
+	Fold_hip_side        float64 `json:"fold_hip_side"`
+	Fold_scapula         float64 `json:"fold_scapula"`
+	Fold_shin            float64 `json:"fold_shin"`
+	Fold_shoulder_front  float64 `json:"fold_shoulder_front"`
+	Fold_shoulder_rear   float64 `json:"fold_shoulder_rear"`
+	Fold_waist_side      float64 `json:"fold_waist_side"`
+	Fold_wrist           float64 `json:"fold_wrist"`
+	Fold_xiphoid         float64 `json:"fold_xiphoid"`
 
 	Notes string `json:"notes"`
 }
@@ -95,18 +97,56 @@ func (s service) Delete(ctx context.Context, id string) (Antro, error) {
 
 func (s service) Create(ctx context.Context, req CreateAntroRequest, owner string) (Antro, error) {
 
+	logger := s.logger.With(ctx, "owner", owner)
+
+	logger.Infof("Create start ")
+
 	id := entity.GenerateID()
 
-	//TODO сделать
-	result_fat := rand.Float32()
-	result_nofat := rand.Float32()
-	result_energy := rand.Float32()
+	logger.Infof("Start get profile")
+
+	profile, err := s.repo.GetProfile(ctx, owner)
+	if err != nil {
+		return Antro{}, err
+	}
+	logger.Infof("End get profile")
+
+	var General_age int
+
+	year, month, day, hour, min, sec := utils.Diff(profile.Birthday, req.Dt)
+	_, _, _, _, _ = month, day, hour, min, sec
+
+	logger.Infof("General_age=" + strconv.Itoa(year))
+
+	General_age = year
+
+	var s3 float64
+	var fat float64
+	var energy float64
+	var nofat float64
+
+	if (profile.Sex) == "M" {
+		s3 = req.Fold_chest + req.Fold_belly + req.Fold_hip_front
+		fat = 495/(1.109380-0.0008267*s3+0.0000016*s3*s3-0.0002574*float64(General_age)) - 450
+		nofat = req.General_weight - (req.General_weight/100)*fat
+		//energy=66+(13.7*req.General_weight)+(5*req.General_height)-(6.8*General_age);
+		energy = 370 + (21.6 * nofat)
+	} else {
+		s3 = req.Fold_shoulder_rear + req.Fold_anterrior_iliac + req.Fold_hip_front
+		fat = 495/(1.099421-0.0009929*s3+0.0000023*s3*s3-0.0001392*float64(General_age)) - 450
+		nofat = req.General_weight - (req.General_weight/100)*fat
+		//energy=655+(9.6*General_age)+(1.8*req.General_height)-(4.7*General_age);
+		energy = 370 + (21.6 * nofat)
+	}
+	if fat > 100 {
+		return Antro{}, errors.BadRequest("МДЖ>100%")
+	}
 
 	e := entity.Antro{
 		ID:                id,
 		Owner:             owner,
 		Dt:                req.Dt,
-		General_age:       40, //TODO сделать расчёт возраста
+		General_age:       General_age,
 		General_hip:       req.General_hip,
 		General_height:    req.General_height,
 		General_leglen:    req.General_leglen,
@@ -132,9 +172,9 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 		Fold_xiphoid:         req.Fold_xiphoid,
 
 		Notes:         req.Notes,
-		Result_fat:    result_fat,
-		Result_nofat:  result_nofat,
-		Result_energy: result_energy,
+		Result_fat:    fat,
+		Result_nofat:  nofat,
+		Result_energy: energy,
 	}
 
 	if req.Id != "" {

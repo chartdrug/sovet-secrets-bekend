@@ -12,8 +12,8 @@ type Users struct {
 	DateLastlogin  time.Time
 	Sex            string    `json:"sex"`
 	Birthday       time.Time `json:"birthday"`
-	Height         float32   `json:"height"`
-	Weight         float32   `json:"weight"`
+	Height         float64   `json:"height"`
+	Weight         float64   `json:"weight"`
 }
 
 // GetID returns the user ID.

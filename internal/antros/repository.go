@@ -14,6 +14,7 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	Create(ctx context.Context, album entity.Antro) error
 	Update(ctx context.Context, album entity.Antro) error
+	GetProfile(ctx context.Context, id string) (entity.Users, error)
 }
 
 type repository struct {
@@ -51,4 +52,10 @@ func (r repository) Create(ctx context.Context, antro entity.Antro) error {
 
 func (r repository) Update(ctx context.Context, antro entity.Antro) error {
 	return r.db.With(ctx).Model(&antro).Update()
+}
+
+func (r repository) GetProfile(ctx context.Context, id string) (entity.Users, error) {
+	var user entity.Users
+	err := r.db.With(ctx).Select().Model(id, &user)
+	return user, err
 }
