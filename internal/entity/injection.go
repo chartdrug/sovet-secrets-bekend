@@ -35,7 +35,7 @@ type PointValue struct {
 }
 
 type Point struct {
-	Dt          int          `json:"dt"`
+	Dt          int64        `json:"dt"`
 	PointValues []PointValue `json:"pointValues"`
 }
 type PointsArray struct {
