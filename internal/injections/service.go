@@ -2,6 +2,7 @@ package injections
 
 import (
 	"context"
+	"fmt"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"math"
 
@@ -155,17 +156,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 		drugs := utils.GetDrugs()
 
 		const cStep = 60000 // шаг в расчетах 1 min
-		//const rStepDefault=300000 // шаг в результате
-		//const ZERO=1e-6 //что считать нулем
-		const ZERO = 0.003 //что считать нулем
-
-		// таблетка только через 30 мин растварится
-		/* почемуто ломает всю логику
-		for i := 1; i <= 30; i++ {
-			point1 := point
-			point1.Dt += cStep * int64(i)
-			result.Points = append(result.Points, point1)
-		}*/
+		const ZERO = 1e-6   //что считать нулем
 
 		for {
 
@@ -212,23 +203,13 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 					pValue.CT = result.Points[count-1].PointValues[count_Injection_Dose].CT
 				}
 
-				//.Infof("drugs[item.ID].Halflife " + string(drugs[item.Drug].Halflife))
-				//logger.Infof("pValue.C " + fmt.Sprintf("%f",pValue.C))
-				//logger.Infof("item.Dose " + fmt.Sprintf("%f",item.Dose))
-				//logger.Infof("drugs[item.ID].Out " + fmt.Sprintf("%f",drugs[item.Drug].Out))
-				//logger.Infof("drugs[item.ID].ID " + drugs[item.Drug].ID)
-				//logger.Infof("item.ID " + item.Drug)
-
-				//var a=(this.CO[i]*Math.exp(-Math.LN2/this.halflife[i]));
 				pValue.C = pValue.C * math.Exp(-math.Ln2/float64(drugs[item.Drug].Halflife))
 				if pValue.C < ZERO {
-					//logger.Infof("pValue.C " + fmt.Sprintf("%f",pValue.C))
 					pValue.C = 0
 				} else {
 					condition = true
 				}
 
-				//this.COT[i]=(this.COT[i]*Math.exp(-Math.LN2/this.halflife[i]));
 				pValue.CT = pValue.CT * math.Exp(-math.Ln2/float64(drugs[item.Drug].Halflife))
 
 				pValue.CC = pValue.C
@@ -260,6 +241,201 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 	} else {
 
+		//иньекция
+		point := entity.Point{}
+		logger.Infof("injection.Injection_Dose " + injection.Injection.Dt.String())
+		point.Dt = injection.Injection.Dt.Unix() * 1000 // приведение в формат старого кода
+
+		//резерв под сумму
+		point.PointValues = append(point.PointValues, entity.PointValue{})
+		point.PointValues[0].Drug = "SUMM"
+		point.PointValues[0].C = 0
+		point.PointValues[0].CC = 0
+		point.PointValues[0].CCT = 0
+		point.PointValues[0].CT = 0
+
+		//проходим по всем дозам
+
+		for _, item := range injection.Injection_Dose {
+
+			if item.Drug != "" {
+				logger.Infof("injection.Injection_Dose " + item.ID)
+			}
+
+			pValue := entity.PointValue{}
+
+			pValue.Drug = item.Drug
+			pValue.C = 0
+			pValue.CC = 0
+			pValue.CCT = 0
+			pValue.CT = 0
+
+			point.PointValues[0].C += pValue.C
+			point.PointValues[0].CC += pValue.CC
+			point.PointValues[0].CCT += pValue.CCT
+			point.PointValues[0].CT += pValue.CT
+
+			point.PointValues = append(point.PointValues, pValue)
+		}
+
+		result.Points = append(result.Points, point)
+
+		var condition = true
+		var count = 1
+
+		drugs := utils.GetDrugs()
+
+		const cStep = 60000 // шаг в расчетах 1 min
+		const ZERO = 1e-6   //что считать нулем
+		const ZERO2 = 1e-4  //что считать нулем
+		//const ZERO=0.003 //что считать нулем
+		injection.Injection.SkinSumm = 0
+		injection.Injection.TotalV = 0
+
+		for {
+
+			//создаём объект для графика
+			point := entity.Point{}
+			//logger.Infof("injection.Injection_Dose " + injection.Injection.Dt.String())
+
+			//иньекция работает сразу
+			point.Dt = result.Points[count-1].Dt + cStep
+
+			// создаём под сумму
+			point.PointValues = append(point.PointValues, entity.PointValue{})
+			point.PointValues[0].Drug = "SUMM"
+			point.PointValues[0].C = 0
+			point.PointValues[0].CC = 0
+			point.PointValues[0].CCT = 0
+			point.PointValues[0].CT = 0
+
+			// проходим по всем иньякциям
+			//this.CO=state.CO; // концентрация лекарства
+			//this.COT=state.COT; // концентрация в пересчете на тестостерон
+			var count_Injection_Dose = 0
+			condition = false
+			for _, item := range injection.Injection_Dose {
+				count_Injection_Dose += 1
+
+				pValue := entity.PointValue{}
+
+				pValue.Drug = item.Drug
+				//первый проход
+				if count == 1 {
+					condition = true
+
+					pValue.OutK = 0.95 * (drugs[item.Drug].Out / 100.0)
+					pValue.OutKT = 0.95 * (drugs[item.Drug].Out / 100.0) * (drugs[item.Drug].Outt / 100.0)
+
+					pValue.Dose = item.Dose * 1
+					pValue.Volume = item.Volume * 1
+
+					//logger.Infof("item.OutK=" + fmt.Sprintf("%f",item.OutK))
+					//logger.Infof("item.OutKT=" + fmt.Sprintf("%f",item.OutKT))
+
+					pValue.C = 0
+					pValue.CT = 0
+					//this.R[idx]=Math.pow((3*inj.volume[idx])/(4*Math.PI),1/3);
+					pValue.R = math.Pow((3.0*pValue.Volume)/(4.0*math.Pi), 1.0/3.0)
+
+					var skin = utils.SkinStep(item.Solvent + injection.Injection.What)
+
+					logger.Infof("SkinStep=" + fmt.Sprintf("%f", skin))
+
+					injection.Injection.TotalV = pValue.Volume * 1
+					injection.Injection.SkinSumm = skin * (pValue.Volume * 1)
+
+				} else {
+					pValue.C = result.Points[count-1].PointValues[count_Injection_Dose].C
+					pValue.CT = result.Points[count-1].PointValues[count_Injection_Dose].CT
+					pValue.R = result.Points[count-1].PointValues[count_Injection_Dose].R
+					pValue.OutK = result.Points[count-1].PointValues[count_Injection_Dose].OutK
+					pValue.OutKT = result.Points[count-1].PointValues[count_Injection_Dose].OutKT
+					pValue.Dose = result.Points[count-1].PointValues[count_Injection_Dose].Dose
+					pValue.Volume = result.Points[count-1].PointValues[count_Injection_Dose].Volume
+
+					//var Cout=float64(0)
+					//var Coutt=float64(0)
+
+					//if (R>ZERO) [Cout,Coutt]=this.ballOut(i);
+					//var r=pValue.R
+					//logger.Infof("pValue.R=" + fmt.Sprintf("%f",r))
+					if pValue.R < ZERO {
+						pValue.Cout = 0.0
+						pValue.Coutt = 0.0
+					} else {
+						logger.Infof("injection.Injection.Skin=" + fmt.Sprintf("%f", injection.Injection.Skin))
+						pValue.Ri = pValue.R - injection.Injection.Skin
+						if pValue.Ri < 0.0 {
+							pValue.Ri = 0.0
+						}
+
+						pValue.Depo = pValue.Dose
+						//var depoi=depo*((4/3*Math.PI*Math.pow(ri,3))/this.volume[idx]); //считаем новый объем
+						//(4/3*math.Pi*math.Pow(pValue.Ri,3))  объём шара
+						pValue.Depoi = pValue.Depo * ((4.0 / 3.0 * math.Pi * math.Pow(pValue.Ri, 3.0)) / pValue.Volume) //считаем новый объем
+
+						pValue.Dv = pValue.Depo - pValue.Depoi
+						pValue.R = pValue.Ri
+						if pValue.Depoi < ZERO {
+							pValue.Depoi = 0
+						}
+
+						pValue.Dose = pValue.Depoi
+
+						if pValue.Dv < ZERO {
+							pValue.Cout = 0.0
+							pValue.Coutt = 0.0
+						} else {
+							pValue.Cout = pValue.Dv * pValue.OutK
+							pValue.Coutt = pValue.Dv * pValue.OutKT
+						}
+
+					}
+
+					//var a=(this.CO[i]*Math.exp(-Math.LN2/this.halflife[i]))+Cout;
+					pValue.C = (pValue.C * math.Exp(-math.Ln2/float64(drugs[item.Drug].Halflife))) + pValue.Cout
+					if pValue.C < ZERO {
+						pValue.C = 0.0
+					} else {
+						condition = true
+					}
+
+					//this.COT[i]=(this.COT[i]*Math.exp(-Math.LN2/this.halflife[i]))+Coutt;
+					pValue.CT = (pValue.CT * math.Exp(-math.Ln2/float64(drugs[item.Drug].Halflife))) + pValue.Coutt
+
+					pValue.CC = pValue.C
+					pValue.CCT = pValue.CT
+
+				}
+				point.PointValues[0].C += pValue.C
+				point.PointValues[0].CC += pValue.CC
+				point.PointValues[0].CCT += pValue.CCT
+				point.PointValues[0].CT += pValue.CT
+
+				point.PointValues = append(point.PointValues, pValue)
+			}
+
+			if count == 1 {
+				injection.Injection.Skin = injection.Injection.SkinSumm / injection.Injection.TotalV
+				logger.Infof("injection.Injection.Skin=" + fmt.Sprintf("%f", injection.Injection.Skin))
+			}
+
+			result.Points = append(result.Points, point)
+
+			//защита от зацикливания
+			if count == 200000 {
+				condition = false
+			}
+
+			if !condition {
+				break
+			}
+			count += 1
+
+		}
+
+		//цик расчёта
 	}
 
 	//dtStart := injection.Injection.Dt

@@ -1,5 +1,7 @@
 package utils
 
+import "math"
+
 type Drug struct {
 	ID       string
 	name     string
@@ -10,9 +12,26 @@ type Drug struct {
 	mmass    float64
 	mmassm   float64
 	Out      float64
-	outt     int
+	Outt     float64
 	Halflife int
 }
+
+type InjBall struct {
+	what     string
+	drugId   string
+	dose     float64
+	volume   float64
+	halflife int
+	outK     float64
+	outKT    float64
+	CO       float64
+	COT      float64
+	R        float64
+	skin     float64
+	pending  bool
+}
+
+const ZERO = 1e-6 //что считать нулем
 
 func GetDrugs() map[string]Drug {
 	d := make(map[string]Drug)
@@ -165,4 +184,56 @@ func GetDrugs() map[string]Drug {
 	}
 
 	return d
+}
+
+func SkinStep(s string) float64 {
+
+	// ключ - "растворитель - инъекция"
+
+	d := make(map[string]float64)
+	d["W1"] = 0.0009
+	d["W2"] = 0.0003
+	d["O1"] = 0.0000025
+	d["O2"] = 0.000000833
+	d["L1"] = 0.000018
+	d["L2"] = 0.000006
+
+	return d[s]
+}
+
+func (InjBall *InjBall) ballOut() (int64, int64) {
+
+	var r = InjBall.R
+
+	return 0, 0
+
+	if r < ZERO {
+		return 0, 0
+	}
+
+	var ri = r - InjBall.skin
+
+	if ri < 0 {
+		ri = 0
+	}
+
+	var depo = InjBall.dose
+
+	var depoi = depo * ((4 / 3 * math.Pi * math.Pow(ri, 3)) / InjBall.volume) //считаем новый объем
+
+	var dv = depo - depoi
+	InjBall.R = ri
+	if depoi < ZERO {
+		depoi = 0
+	}
+
+	InjBall.dose = depoi
+	if dv < ZERO {
+		return 0, 0
+	}
+
+	InjBall.pending = true
+
+	return int64(dv * InjBall.outK), int64(dv * InjBall.outKT)
+
 }

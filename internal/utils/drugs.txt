@@ -1,0 +1,8 @@
+				//.Infof("drugs[item.ID].Halflife " + string(drugs[item.Drug].Halflife))
+				//logger.Infof("pValue.C " + fmt.Sprintf("%f",pValue.C))
+				//logger.Infof("item.Dose " + fmt.Sprintf("%f",item.Dose))
+				//logger.Infof("drugs[item.ID].Out " + fmt.Sprintf("%f",drugs[item.Drug].Out))
+				//logger.Infof("drugs[item.ID].ID " + drugs[item.Drug].ID)
+				//logger.Infof("item.ID " + item.Drug)
+
+				//var a=(this.CO[i]*Math.exp(-Math.LN2/this.halflife[i]));

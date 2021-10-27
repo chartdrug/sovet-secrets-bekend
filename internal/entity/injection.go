@@ -18,7 +18,10 @@ type Injection struct {
 	Owner string    `json:"owner"`
 	Dt    time.Time `json:"dt"`
 	//Course  string           `json:"course"`
-	What string `json:"what"`
+	What     string  `json:"what"`
+	TotalV   float64 `db:"-"`
+	SkinSumm float64 `db:"-"`
+	Skin     float64 `db:"-"`
 }
 
 type InjectionModel struct {
@@ -32,6 +35,19 @@ type PointValue struct {
 	CC   float64 `json:"CC"`
 	CCT  float64 `json:"CCT"`
 	CT   float64 `json:"CT"`
+	R    float64
+	//CO  float64
+	//COT  float64
+	OutK   float64 `db:"-"`
+	OutKT  float64 `db:"-"`
+	Dose   float64 `json:"dose"`
+	Volume float64 `json:"volume"`
+	Ri     float64
+	Depo   float64
+	Depoi  float64
+	Dv     float64
+	Cout   float64
+	Coutt  float64
 }
 
 type Point struct {
