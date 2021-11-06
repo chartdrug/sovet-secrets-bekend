@@ -194,9 +194,9 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 				//первый проход
 				if count == 1 {
 					//this.rout[idx]=inj.dose[idx]*0.7*(drug.out/100);
-					pValue.C = item.Dose * 0.7 * (drugs[item.Drug].Out / 100)
+					pValue.C = item.Dose * 0.7 * (drugs[item.Drug].Out / 100.0)
 					//this.routt[idx]=inj.dose[idx]*0.7*(drug.out/100)*(drug.outt/100);
-					pValue.CT = item.Dose * 0.7 * (drugs[item.Drug].Out / 100) * drugs[item.Drug].Out / 100
+					pValue.CT = item.Dose * 0.7 * (drugs[item.Drug].Out / 100.0) * drugs[item.Drug].Out / 100.0
 
 				} else {
 					pValue.C = result.Points[count-1].PointValues[count_Injection_Dose].C
@@ -288,7 +288,6 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 		const cStep = 60000 // шаг в расчетах 1 min
 		const ZERO = 1e-6   //что считать нулем
 		const ZERO2 = 1e-4  //что считать нулем
-		//const ZERO=0.003 //что считать нулем
 		injection.Injection.SkinSumm = 0
 		injection.Injection.TotalV = 0
 
