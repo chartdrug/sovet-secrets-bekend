@@ -18,6 +18,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 
 	// the following endpoints require a valid JWT
 	r.Get("/api/injections", res.get)
+	r.Get("/api/injections/report", res.getReort)
 	r.Get("/api/injections/inj/<id>", res.getinj)
 	//r.Delete("/api/antros/<id>", res.delete)
 	r.Post("/api/injection", res.create)
@@ -64,6 +65,29 @@ func (r resource) getinj(c *routing.Context) error {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		injection, err := r.service.Getinj(c.Request.Context(), c.Param("id"), claims["id"].(string))
+		if err != nil {
+			return err
+		}
+
+		return c.Write(injection)
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) getReort(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		injection, err := r.service.GetinjReort(c.Request.Context(), claims["id"].(string))
 		if err != nil {
 			return err
 		}

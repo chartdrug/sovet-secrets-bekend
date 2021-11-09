@@ -15,6 +15,7 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
 	DeleteDose(ctx context.Context, idDose string) error
+	SaveConcentration(ctx context.Context, concentration entity.Concentration) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 }
@@ -70,6 +71,10 @@ func (r repository) DeleteDose(ctx context.Context, idDose string) error {
 
 func (r repository) CreateInjection(ctx context.Context, injection entity.Injection) error {
 	return r.db.With(ctx).Model(&injection).Insert()
+}
+
+func (r repository) SaveConcentration(ctx context.Context, concentration entity.Concentration) error {
+	return r.db.With(ctx).Model(&concentration).Insert()
 }
 
 func (r repository) CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error {

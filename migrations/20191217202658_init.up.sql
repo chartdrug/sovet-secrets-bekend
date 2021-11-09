@@ -99,4 +99,14 @@ CREATE TABLE injection_dose
     CONSTRAINT injection_dose_pkey PRIMARY KEY (id)
 );
 
-
+CREATE TABLE concentration (
+   owner uuid NOT NULL,
+   Id_injection uuid NOT NULL,
+   drug varchar(37),
+   dt integer,
+   C double precision,
+   CC double precision,
+   CCT double precision,
+   CT double precision
+);
+CREATE INDEX idx_concentration_owner ON concentration(owner);

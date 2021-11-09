@@ -24,6 +24,17 @@ type Injection struct {
 	Skin     float64 `db:"-"`
 }
 
+type Concentration struct {
+	Owner        string
+	Id_injection string
+	Drug         string
+	Dt           int
+	C            float64
+	CC           float64
+	CCT          float64
+	CT           float64
+}
+
 type InjectionModel struct {
 	Injection      Injection        `json:"injection"`
 	Injection_Dose []Injection_Dose `json:"injection_dose"`

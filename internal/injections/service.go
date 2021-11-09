@@ -2,7 +2,6 @@ package injections
 
 import (
 	"context"
-	"fmt"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"math"
 
@@ -25,6 +24,7 @@ import (
 type Service interface {
 	Get(ctx context.Context, owner string) ([]InjectionModel, error)
 	Getinj(ctx context.Context, id string, owner string) (Points, error)
+	GetinjReort(ctx context.Context, owner string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
@@ -92,8 +92,49 @@ func (s service) Get(ctx context.Context, owner string) ([]InjectionModel, error
 	return result, nil
 }
 
+func (s service) GetinjReort(ctx context.Context, owner string) (Points, error) {
+	result := Points{}
+
+	result.Drugs = append(result.Drugs, "00000001-0003-0000-0000-ff00ff00ff00")
+
+	for i := 0; i < 3; i++ {
+
+		point := entity.Point{}
+
+		point.Dt = int64(1625079780000 + (i * 10000000))
+
+		point.PointValues = append(point.PointValues, entity.PointValue{})
+
+		point.PointValues[0].Drug = "SUMM"
+		point.PointValues[0].C = 0
+		point.PointValues[0].CC = 0
+		point.PointValues[0].CCT = 0
+		point.PointValues[0].CT = 0
+
+		pValue := entity.PointValue{}
+
+		pValue.Drug = "00000001-0003-0000-0000-ff00ff00ff00"
+		pValue.C = float64(i)
+		pValue.CC = float64(i)
+		pValue.CCT = float64(i)
+		pValue.CT = float64(i)
+
+		point.PointValues[0].C += pValue.C
+		point.PointValues[0].CC += pValue.CC
+		point.PointValues[0].CCT += pValue.CCT
+		point.PointValues[0].CT += pValue.CT
+
+		point.PointValues = append(point.PointValues, pValue)
+
+		result.Points = append(result.Points, point)
+
+	}
+
+	return result, nil
+}
+
 func (s service) Getinj(ctx context.Context, id string, owner string) (Points, error) {
-	logger := s.logger.With(ctx, "id", id)
+	//logger := s.logger.With(ctx, "id", id)
 
 	injection, err := s.GetOne(ctx, id)
 	if err != nil {
@@ -110,7 +151,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 	if injection.Injection.What == "W" {
 		//табл
 		point := entity.Point{}
-		logger.Infof("injection.Injection_Dose " + injection.Injection.Dt.String())
+		//logger.Infof("injection.Injection_Dose " + injection.Injection.Dt.String())
 		point.Dt = injection.Injection.Dt.Unix() * 1000 // приведение в формат старого кода
 		//в исходнике 1633244400000
 		// у меня     1633255200
@@ -128,9 +169,9 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 		for _, item := range injection.Injection_Dose {
 
-			if item.Drug != "" {
-				logger.Infof("injection.Injection_Dose " + item.ID)
-			}
+			//if item.Drug != "" {
+			//logger.Infof("injection.Injection_Dose " + item.ID)
+			//}
 
 			pValue := entity.PointValue{}
 
@@ -243,7 +284,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 		//иньекция
 		point := entity.Point{}
-		logger.Infof("injection.Injection_Dose " + injection.Injection.Dt.String())
+		//logger.Infof("injection.Injection_Dose " + injection.Injection.Dt.String())
 		point.Dt = injection.Injection.Dt.Unix() * 1000 // приведение в формат старого кода
 
 		//резерв под сумму
@@ -258,9 +299,9 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 		for _, item := range injection.Injection_Dose {
 
-			if item.Drug != "" {
-				logger.Infof("injection.Injection_Dose " + item.ID)
-			}
+			//if item.Drug != "" {
+			//	logger.Infof("injection.Injection_Dose " + item.ID)
+			//}
 
 			pValue := entity.PointValue{}
 
@@ -339,7 +380,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 					var skin = utils.SkinStep(item.Solvent + injection.Injection.What)
 
-					logger.Infof("SkinStep=" + fmt.Sprintf("%f", skin))
+					//logger.Infof("SkinStep=" + fmt.Sprintf("%f", skin))
 
 					injection.Injection.TotalV = pValue.Volume * 1
 					injection.Injection.SkinSumm = skin * (pValue.Volume * 1)
@@ -363,7 +404,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 						pValue.Cout = 0.0
 						pValue.Coutt = 0.0
 					} else {
-						logger.Infof("injection.Injection.Skin=" + fmt.Sprintf("%f", injection.Injection.Skin))
+						//logger.Infof("injection.Injection.Skin=" + fmt.Sprintf("%f", injection.Injection.Skin))
 						pValue.Ri = pValue.R - injection.Injection.Skin
 						if pValue.Ri < 0.0 {
 							pValue.Ri = 0.0
@@ -417,7 +458,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 			if count == 1 {
 				injection.Injection.Skin = injection.Injection.SkinSumm / injection.Injection.TotalV
-				logger.Infof("injection.Injection.Skin=" + fmt.Sprintf("%f", injection.Injection.Skin))
+				//logger.Infof("injection.Injection.Skin=" + fmt.Sprintf("%f", injection.Injection.Skin))
 			}
 
 			result.Points = append(result.Points, point)
@@ -464,7 +505,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 			for _, item := range injection.Injection_Dose {
 
 				if item.Drug != "" {
-					logger.Infof("injection.Injection_Dose " + item.ID)
+					//logger.Infof("injection.Injection_Dose " + item.ID)
 				}
 
 				pValue := entity.PointValue{}
