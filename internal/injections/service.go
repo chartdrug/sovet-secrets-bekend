@@ -95,41 +95,78 @@ func (s service) Get(ctx context.Context, owner string) ([]InjectionModel, error
 func (s service) GetinjReort(ctx context.Context, owner string) (Points, error) {
 	result := Points{}
 
-	result.Drugs = append(result.Drugs, "00000001-0003-0000-0000-ff00ff00ff00")
+	ConcentrationDrugs, errConcentrationDrugs := s.repo.GetConcentrationDrugs(ctx, owner)
 
-	for i := 0; i < 3; i++ {
+	if errConcentrationDrugs != nil {
+		return Points{}, errConcentrationDrugs
+	}
 
+	for _, itemConcentrationDrugs := range ConcentrationDrugs {
+		result.Drugs = append(result.Drugs, itemConcentrationDrugs.Drug)
+	}
+
+	Concentration, errConcentration := s.repo.GetConcentration(ctx, owner, "11")
+
+	if errConcentration != nil {
+		return Points{}, errConcentration
+	}
+	for _, itemConcentration := range Concentration {
 		point := entity.Point{}
-
-		point.Dt = int64(1625079780000 + (i * 10000000))
+		point.Dt = itemConcentration.Dt
 
 		point.PointValues = append(point.PointValues, entity.PointValue{})
 
 		point.PointValues[0].Drug = "SUMM"
-		point.PointValues[0].C = 0
-		point.PointValues[0].CC = 0
 		point.PointValues[0].CCT = 0
-		point.PointValues[0].CT = 0
 
 		pValue := entity.PointValue{}
 
-		pValue.Drug = "00000001-0003-0000-0000-ff00ff00ff00"
-		pValue.C = float64(i)
-		pValue.CC = float64(i)
-		pValue.CCT = float64(i)
-		pValue.CT = float64(i)
+		pValue.Drug = itemConcentration.Drug
+		pValue.CCT = itemConcentration.CCT
 
-		point.PointValues[0].C += pValue.C
-		point.PointValues[0].CC += pValue.CC
 		point.PointValues[0].CCT += pValue.CCT
-		point.PointValues[0].CT += pValue.CT
 
 		point.PointValues = append(point.PointValues, pValue)
 
 		result.Points = append(result.Points, point)
 
+		//fmt.Println(itemConcentration.Drug)
 	}
 
+	/*
+		for i := 0; i < 3; i++ {
+
+			point := entity.Point{}
+
+			point.Dt = int64(1625079780000 + (i * 10000000))
+
+			point.PointValues = append(point.PointValues, entity.PointValue{})
+
+			point.PointValues[0].Drug = "SUMM"
+			point.PointValues[0].C = 0
+			point.PointValues[0].CC = 0
+			point.PointValues[0].CCT = 0
+			point.PointValues[0].CT = 0
+
+			pValue := entity.PointValue{}
+
+			pValue.Drug = "00000001-0003-0000-0000-ff00ff00ff00"
+			pValue.C = float64(i)
+			pValue.CC = float64(i)
+			pValue.CCT = float64(i)
+			pValue.CT = float64(i)
+
+			point.PointValues[0].C += pValue.C
+			point.PointValues[0].CC += pValue.CC
+			point.PointValues[0].CCT += pValue.CCT
+			point.PointValues[0].CT += pValue.CT
+
+			point.PointValues = append(point.PointValues, pValue)
+
+			result.Points = append(result.Points, point)
+
+		}
+	*/
 	return result, nil
 }
 
@@ -529,6 +566,36 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 		}
 	}
 
+	//чистим данные
+	/*
+		errDelete := s.repo.DeleteConcentration(ctx, id)
+		if errDelete != nil {
+			return Points{}, errDelete
+		}
+		//сохроняем в БД
+
+		for _, itemPoint := range result.Points {
+
+			for _, itemPoints := range itemPoint.PointValues {
+
+				if itemPoints.Drug != "SUMM"{
+					errSave := s.repo.SaveConcentration(ctx, entity.Concentration{
+						Owner:        owner,
+						Id_injection: id,
+						Drug:         itemPoints.Drug,
+						Dt:           itemPoint.Dt,
+						C:            itemPoints.C,
+						CC:           itemPoints.CC,
+						CCT:          itemPoints.CCT,
+						CT:           itemPoints.CT,
+					})
+					if errSave != nil {
+						return Points{}, errSave
+					}
+				}
+
+			}
+		}*/
 	return result, nil
 }
 

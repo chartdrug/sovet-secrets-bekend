@@ -127,6 +127,7 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 
 	if (profile.Sex) == "M" {
 		s3 = req.Fold_chest + req.Fold_belly + req.Fold_hip_front
+		//todo нужно проверить формулу
 		fat = 495/(1.109380-0.0008267*s3+0.0000016*s3*s3-0.0002574*float64(General_age)) - 450
 		nofat = req.General_weight - (req.General_weight/100)*fat
 		//energy=66+(13.7*req.General_weight)+(5*req.General_height)-(6.8*General_age);

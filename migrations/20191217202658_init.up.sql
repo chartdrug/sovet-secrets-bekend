@@ -100,13 +100,13 @@ CREATE TABLE injection_dose
 );
 
 CREATE TABLE concentration (
-   owner uuid NOT NULL,
-   Id_injection uuid NOT NULL,
-   drug varchar(37),
-   dt integer,
-   C double precision,
-   CC double precision,
-   CCT double precision,
-   CT double precision
+       owner uuid NOT NULL,
+       Id_injection uuid NOT NULL,
+       drug varchar(37),
+       dt BIGINT,
+       C double precision,
+       CC double precision,
+       CCT double precision,
+       CT double precision
 );
 CREATE INDEX idx_concentration_owner ON concentration(owner);

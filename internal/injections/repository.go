@@ -16,8 +16,11 @@ type Repository interface {
 	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
 	DeleteDose(ctx context.Context, idDose string) error
 	SaveConcentration(ctx context.Context, concentration entity.Concentration) error
+	DeleteConcentration(ctx context.Context, id string) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
+	GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error)
+	GetConcentration(ctx context.Context, owner string, drug string) ([]entity.Concentration, error)
 }
 
 type repository struct {
@@ -75,6 +78,37 @@ func (r repository) CreateInjection(ctx context.Context, injection entity.Inject
 
 func (r repository) SaveConcentration(ctx context.Context, concentration entity.Concentration) error {
 	return r.db.With(ctx).Model(&concentration).Insert()
+}
+
+func (r repository) GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error) {
+	var concentrationDrugs []entity.Concentration
+	err := r.db.With(ctx).Select("drug").Where(dbx.HashExp{"owner": owner}).Distinct(true).All(&concentrationDrugs)
+	return concentrationDrugs, err
+}
+
+func (r repository) GetConcentration(ctx context.Context, owner string, drug string) ([]entity.Concentration, error) {
+	var concentration []entity.Concentration
+	/*
+		var concentration []struct {
+			Drug string
+			Dt int64
+			CCT int64
+		}*/
+	/*q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
+	"from concentration where owner = '3a56fd3a-e7ee-11eb-ba80-0242ac130004' " +
+	"and drug = '00000001-0003-0000-0000-ff00ff00ff00' " +
+	"group by drug,round(dt/(1000*60*5))*(1000*60*5) order by drug,dt")*/
+	q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*5))*(1000*60*5) AS BIGINT) as dt from concentration where id_injection = '029ef562-c5f5-48a8-9ebb-eabd148e8c70'\n")
+	err := q.All(&concentration)
+	return concentration, err
+	//return r.db.With(ctx).NewQuery("wqw")
+	//.Delete("concentration",dbx.HashExp{"id_injection": id}).All(&concentration)
+}
+
+func (r repository) DeleteConcentration(ctx context.Context, id string) error {
+	var concentration []entity.Concentration
+	return r.db.With(ctx).Delete("concentration", dbx.HashExp{"id_injection": id}).All(&concentration)
+
 }
 
 func (r repository) CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error {

@@ -6,6 +6,7 @@ import (
 	"github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"math"
 	"net/http"
 	"strings"
 )
@@ -69,6 +70,22 @@ func (r resource) getinj(c *routing.Context) error {
 			return err
 		}
 
+		for i := len(injection.Points) - 1; i >= 0; i-- {
+			//fmt.Println("test2")
+			application := injection.Points[i]
+			// Condition to decide if current element has to be deleted:
+			if application.PointValues[0].CCT < 0.2 {
+				//fmt.Println("server %v\n", application.PointValues[0].CCT)
+				injection.Points = append(injection.Points[:i],
+					injection.Points[i+1:]...)
+			} else {
+				for _, item := range application.PointValues {
+					item.CCT = math.Round(item.CCT*1000) / 1000
+				}
+				application.PointValues[0].CCT = math.Round(application.PointValues[0].CCT*1000) / 1000
+			}
+		}
+
 		return c.Write(injection)
 	} else {
 		return err
@@ -90,6 +107,19 @@ func (r resource) getReort(c *routing.Context) error {
 		injection, err := r.service.GetinjReort(c.Request.Context(), claims["id"].(string))
 		if err != nil {
 			return err
+		}
+
+		for i := len(injection.Points) - 1; i >= 0; i-- {
+			//fmt.Println("test2")
+			application := injection.Points[i]
+			// Condition to decide if current element has to be deleted:
+			if application.PointValues[0].CCT < 0.2 {
+				//fmt.Println("server %v\n", application.PointValues[0].CCT)
+				injection.Points = append(injection.Points[:i],
+					injection.Points[i+1:]...)
+			} else {
+				application.PointValues[0].CCT = math.Round(application.PointValues[0].CCT*100) / 100
+			}
 		}
 
 		return c.Write(injection)

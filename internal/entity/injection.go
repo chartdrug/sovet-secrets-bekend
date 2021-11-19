@@ -28,7 +28,7 @@ type Concentration struct {
 	Owner        string
 	Id_injection string
 	Drug         string
-	Dt           int
+	Dt           int64
 	C            float64
 	CC           float64
 	CCT          float64
@@ -46,19 +46,19 @@ type PointValue struct {
 	CC   float64 `json:"CC"`
 	CCT  float64 `json:"CCT"`
 	CT   float64 `json:"CT"`
-	R    float64
+	R    float64 `json:"-"`
 	//CO  float64
 	//COT  float64
-	OutK   float64 `db:"-"`
-	OutKT  float64 `db:"-"`
-	Dose   float64 `json:"dose"`
-	Volume float64 `json:"volume"`
-	Ri     float64
-	Depo   float64
-	Depoi  float64
-	Dv     float64
-	Cout   float64
-	Coutt  float64
+	OutK   float64 `json:"-" db:"-"`
+	OutKT  float64 `json:"-" db:"-"`
+	Dose   float64 `json:"-"`
+	Volume float64 `json:"-"`
+	Ri     float64 `json:"-"`
+	Depo   float64 `json:"-"`
+	Depoi  float64 `json:"-"`
+	Dv     float64 `json:"-"`
+	Cout   float64 `json:"-"`
+	Coutt  float64 `json:"-"`
 }
 
 type Point struct {
@@ -74,3 +74,8 @@ type PointsArray struct {
 func (u Injection) GetID() string {
 	return u.ID
 }
+
+/*
+type concentration struct {
+	Drug string
+}*/
