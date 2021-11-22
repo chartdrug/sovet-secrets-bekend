@@ -705,8 +705,8 @@ func (s service) DeleteDose(ctx context.Context, id string, idDose string, owner
 	}
 	// если нет больше доз то удаляем всё связку
 
-	//logger.Infof(" len(injection.Injection_Dose)= " +  len(injection.Injection_Dose))
-	if len(injection.Injection_Dose) < 0 {
+	//logger.Infof("Injection_Dose=" + fmt.Sprintf("%f", len(injection.Injection_Dose)))
+	if len(injection.Injection_Dose) == 0 {
 		if err = s.repo.Delete(ctx, id); err != nil {
 			return InjectionModel{}, err
 		}

@@ -6,7 +6,7 @@ import "time"
 
 type Injection_Dose struct {
 	ID           string  `json:"id"`
-	Id_injection string  `json:"id_injection"`
+	Id_injection string  `json:"-"`
 	Dose         float64 `json:"dose"`
 	Drug         string  `json:"drug"`
 	Volume       float64 `json:"volume"`
@@ -15,13 +15,13 @@ type Injection_Dose struct {
 
 type Injection struct {
 	ID    string
-	Owner string    `json:"owner"`
+	Owner string    `json:"-"`
 	Dt    time.Time `json:"dt"`
 	//Course  string           `json:"course"`
 	What     string  `json:"what"`
-	TotalV   float64 `db:"-"`
-	SkinSumm float64 `db:"-"`
-	Skin     float64 `db:"-"`
+	TotalV   float64 `json:"-" db:"-"`
+	SkinSumm float64 `json:"-" db:"-"`
+	Skin     float64 `json:"-" db:"-"`
 }
 
 type Concentration struct {
