@@ -2,22 +2,11 @@ package injections
 
 import (
 	"context"
-	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
-	"math"
-
-	//"fmt"
-	//"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
-	//"math"
-
-	//"fmt"
-	//"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
-
-	//"fmt"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
-	//"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
-	//"math"
+	"math"
 )
 
 // Service encapsulates usecase logic for albums.
@@ -72,21 +61,29 @@ func NewService(repo Repository, logger log.Logger) Service {
 
 // Get returns the album with the specified the album ID.
 func (s service) Get(ctx context.Context, owner string) ([]InjectionModel, error) {
+	//logger := s.logger.With(ctx, "owner", owner)
 	items, err := s.repo.Get(ctx, owner)
 	if err != nil {
 		return nil, err
 	}
 	result := []InjectionModel{}
+
+	itemsAllDose, errAllDose := s.repo.GetAllDose(ctx, owner)
+	if errAllDose != nil {
+		return nil, errAllDose
+	}
+
 	for _, item := range items {
-		itemsDose, errDose := s.repo.GetDose(ctx, item.ID)
-		if errDose != nil {
-			return nil, errDose
-		}
-		//resultDose := []Injection_Dose{}
-		//item.Injection_Dose = itemsDose
 		resultModel := InjectionModel{}
 		resultModel.Injection = item
-		resultModel.Injection_Dose = itemsDose
+		resultModel.Injection_Dose = []entity.Injection_Dose{}
+
+		for _, itemDose := range itemsAllDose {
+			//logger.Infof("injection.Injection_Dose " + itemDose.Drug)
+			if itemDose.Id_injection == item.ID {
+				resultModel.Injection_Dose = append(resultModel.Injection_Dose, itemDose)
+			}
+		}
 		result = append(result, resultModel)
 	}
 	return result, nil

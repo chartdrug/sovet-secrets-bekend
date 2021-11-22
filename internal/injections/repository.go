@@ -11,6 +11,7 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id string) ([]entity.Injection, error)
 	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
+	GetAllDose(ctx context.Context, owner string) ([]entity.Injection_Dose, error)
 	GetOne(ctx context.Context, id string) (entity.Injection, error)
 	Delete(ctx context.Context, id string) error
 	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
@@ -53,6 +54,12 @@ func (r repository) GetOne(ctx context.Context, id string) (entity.Injection, er
 func (r repository) GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error) {
 	var injectionDose entity.Injection_Dose
 	err := r.db.With(ctx).Select().Model(id, &injectionDose)
+	return injectionDose, err
+}
+
+func (r repository) GetAllDose(ctx context.Context, owner string) ([]entity.Injection_Dose, error) {
+	var injectionDose []entity.Injection_Dose
+	err := r.db.With(ctx).NewQuery("select *  from injection_dose where id_injection in (select id from injection where owner = {:owner})").Bind(dbx.Params{"owner": owner}).All(&injectionDose)
 	return injectionDose, err
 }
 
