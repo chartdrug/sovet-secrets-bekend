@@ -11,7 +11,7 @@ import (
 
 // Service encapsulates usecase logic for albums.
 type Service interface {
-	Get(ctx context.Context, owner string) ([]InjectionModel, error)
+	GetAllDose(ctx context.Context, owner string) ([]InjectionModel, error)
 	Getinj(ctx context.Context, id string, owner string) (Points, error)
 	GetinjReort(ctx context.Context, owner string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
@@ -60,7 +60,7 @@ func NewService(repo Repository, logger log.Logger) Service {
 }
 
 // Get returns the album with the specified the album ID.
-func (s service) Get(ctx context.Context, owner string) ([]InjectionModel, error) {
+func (s service) GetAllDose(ctx context.Context, owner string) ([]InjectionModel, error) {
 	//logger := s.logger.With(ctx, "owner", owner)
 	items, err := s.repo.Get(ctx, owner)
 	if err != nil {

@@ -238,6 +238,10 @@ docker run -it --rm -d -p 8080:8080 --name server server
 cd /etc/nginx
 sudo systemctl reload nginx
 
+docker exec -it server bash
+
+tail -n 5 /var/log/app/server.log 
+
 
 ```
 
