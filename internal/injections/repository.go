@@ -99,8 +99,6 @@ func (r repository) CreateInjection(ctx context.Context, injection entity.Inject
 
 func (r repository) SaveConcentration(ctx context.Context, concentration []entity.Concentration) error {
 
-	//data := []Person{{"John", "Doe", 27}, {"Leeroy", "Jenkins", 19}}
-
 	vals := []interface{}{}
 	for _, row := range concentration {
 		vals = append(vals, row.Owner, row.Id_injection, row.Drug, row.Dt, row.C, row.CC, row.CCT, row.CT)
@@ -115,76 +113,6 @@ func (r repository) SaveConcentration(ctx context.Context, concentration []entit
 
 	return err
 
-	/*valueStrings := []string{}
-	valueArgs := []interface{}{}
-	for _, w := range concentration {
-		valueStrings = append(valueStrings, "(?, ?, ?, ?)")
-
-		valueArgs = append(valueArgs, w.Owner)
-		valueArgs = append(valueArgs, w.Id_injection)
-		valueArgs = append(valueArgs, w.Drug)
-		valueArgs = append(valueArgs, w.Dt)
-	}
-	smt := "INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s"
-	smt = fmt.Sprintf(smt, strings.Join(valueStrings, ","))
-	fmt.Println("smttt:", smt)
-	tx, _ := r.db2.Begin()
-	_, err := tx.Exec(smt, valueArgs...)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-
-	return nil*/
-
-	/*
-		valueStrings := make([]string, 0, len(concentration))
-		valueArgs := make([]interface{}, 0, len(concentration) * 8)
-		i := 0
-		for _, post := range concentration {
-			valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)", i*3+1, i*3+2, i*3+3, i*3+4, i*3+5, i*3+6, i*3+7, i*3+8))
-			//valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)"))
-			valueArgs = append(valueArgs, post.Owner)
-			valueArgs = append(valueArgs, post.Id_injection)
-			valueArgs = append(valueArgs, post.Drug)
-			valueArgs = append(valueArgs, post.Dt)
-			valueArgs = append(valueArgs, post.C)
-			valueArgs = append(valueArgs, post.CC)
-			valueArgs = append(valueArgs, post.CCT)
-			valueArgs = append(valueArgs, post.CT)
-			i++
-		}
-
-		stmt := fmt.Sprintf("INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s", strings.Join(valueStrings, ","))
-
-		fmt.Println(stmt)
-		_, err :=  r.db2.Exec(stmt, valueArgs...)*/
-
-	//return err
-
-	/*tx, _ := r.db.DB().Begin()
-
-	for _, item := range concentration {
-		_, err := tx.Insert("concentration", dbx.Params{
-			"owner": item.Owner,
-			"id_injection": item.Id_injection,
-			"drug": item.Drug,
-			"dt" : item.Dt,
-			"c" : item.C,
-			"cc" : item.CC,
-			"cct" : item.CCT,
-			"ct": item.CT,
-		}).Execute()
-		if err != nil  {
-			tx.Rollback()
-			return err
-		}
-	}
-
-	tx.Commit()
-
-	return nil*/
 }
 
 func (r repository) GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error) {
