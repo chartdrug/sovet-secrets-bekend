@@ -2,6 +2,7 @@ package injections
 
 import (
 	"context"
+	"fmt"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
@@ -184,7 +185,7 @@ func (s service) GetinjReort(ctx context.Context, owner string) (Points, error) 
 }
 
 func (s service) Getinj(ctx context.Context, id string, owner string) (Points, error) {
-	//logger := s.logger.With(ctx, "id", id)
+	logger := s.logger.With(ctx, "id", id)
 
 	injection, err := s.GetOne(ctx, id)
 	if err != nil {
@@ -579,36 +580,41 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 		}
 	}
 
-	//чистим данные
-	/*
-		errDelete := s.repo.DeleteConcentration(ctx, id)
-		if errDelete != nil {
-			return Points{}, errDelete
-		}
-		//сохроняем в БД
+	//чистим данные по прошлым расчётам
+	errDelete := s.repo.DeleteConcentration(ctx, owner, id)
+	if errDelete != nil {
+		return Points{}, errDelete
+	}
+	//сохроняем в БД
+	arryaConcentration := []entity.Concentration{}
 
-		for _, itemPoint := range result.Points {
+	for _, itemPoint := range result.Points {
 
-			for _, itemPoints := range itemPoint.PointValues {
+		for _, itemPoints := range itemPoint.PointValues {
 
-				if itemPoints.Drug != "SUMM"{
-					errSave := s.repo.SaveConcentration(ctx, entity.Concentration{
-						Owner:        owner,
-						Id_injection: id,
-						Drug:         itemPoints.Drug,
-						Dt:           itemPoint.Dt,
-						C:            itemPoints.C,
-						CC:           itemPoints.CC,
-						CCT:          itemPoints.CCT,
-						CT:           itemPoints.CT,
-					})
-					if errSave != nil {
-						return Points{}, errSave
-					}
-				}
-
+			if itemPoints.Drug != "SUMM" {
+				arryaConcentration = append(arryaConcentration, entity.Concentration{
+					Owner:        owner,
+					Id_injection: id,
+					Drug:         itemPoints.Drug,
+					Dt:           itemPoint.Dt,
+					C:            itemPoints.C,
+					CC:           itemPoints.CC,
+					CCT:          itemPoints.CCT,
+					CT:           itemPoints.CT,
+				})
 			}
-		}*/
+
+		}
+	}
+
+	logger.Infof("arryaConcentration row to save = " + fmt.Sprintf("%v", len(arryaConcentration)))
+
+	errSave := s.repo.SaveConcentration(ctx, arryaConcentration)
+	if errSave != nil {
+		return Points{}, errSave
+	}
+
 	return result, nil
 }
 

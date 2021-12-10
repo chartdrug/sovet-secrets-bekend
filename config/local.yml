@@ -1,5 +1,6 @@
 #dsn: "postgres://127.0.0.1/go_restful?sslmode=disable&user=postgres&password=postgres"
 #dsn: "postgres://batyr.db.elephantsql.com:5432/go_restful?sslmode=disable&user=tyswoumt&password=yA9qwnAbLomPoH-TzudXXz52hkigwOBJ"
-dsn: "postgres://tyswoumt:yA9qwnAbLomPoH-TzudXXz52hkigwOBJ@batyr.db.elephantsql.com/tyswoumt"
+#dsn: "postgres://tyswoumt:yA9qwnAbLomPoH-TzudXXz52hkigwOBJ@batyr.db.elephantsql.com/tyswoumt"
+dsn: "postgres://chartdrug:yA9qwnAbLomPoH-TzudXXz52hkigwOBJ@postgresql-61526-0.cloudclusters.net:11750/chartdrug"
 jwt_signing_key: "LxsKJywDL5O5PvgODZhBH12KE6k2yL8E"
 #jwt_expiration: "1";

@@ -3,7 +3,6 @@ package profile
 import (
 	"context"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"time"
@@ -38,7 +37,8 @@ func (m CreateUser) Validate() error {
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Login, validation.Required, validation.Length(5, 20)),
 		validation.Field(&m.Pass, validation.Required, validation.Length(5, 20)),
-		validation.Field(&m.Email, validation.Required, is.Email),
+		//validation.Field(&m.Email, validation.Required, is.Email),
+		validation.Field(&m.Email, validation.Required, validation.Length(5, 40)),
 		validation.Field(&m.Sex, validation.Required, validation.In("M", "F")),
 		validation.Field(&m.Birthday, validation.Required, validation.NotNil),
 	)

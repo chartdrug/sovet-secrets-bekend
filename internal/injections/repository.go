@@ -2,10 +2,14 @@ package injections
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/dbcontext"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -18,8 +22,8 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
 	DeleteDose(ctx context.Context, idDose string) error
-	SaveConcentration(ctx context.Context, concentration entity.Concentration) error
-	DeleteConcentration(ctx context.Context, id string) error
+	SaveConcentration(ctx context.Context, concentration []entity.Concentration) error
+	DeleteConcentration(ctx context.Context, owner string, id string) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 	GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error)
@@ -28,11 +32,12 @@ type Repository interface {
 
 type repository struct {
 	db     *dbcontext.DB
+	db2    *sql.DB
 	logger log.Logger
 }
 
-func NewRepository(db *dbcontext.DB, logger log.Logger) Repository {
-	return repository{db, logger}
+func NewRepository(db *dbcontext.DB, db2 *sql.DB, logger log.Logger) Repository {
+	return repository{db, db2, logger}
 }
 
 func (r repository) Get(ctx context.Context, owner string) ([]entity.Injection, error) {
@@ -92,8 +97,94 @@ func (r repository) CreateInjection(ctx context.Context, injection entity.Inject
 	return r.db.With(ctx).Model(&injection).Insert()
 }
 
-func (r repository) SaveConcentration(ctx context.Context, concentration entity.Concentration) error {
-	return r.db.With(ctx).Model(&concentration).Insert()
+func (r repository) SaveConcentration(ctx context.Context, concentration []entity.Concentration) error {
+
+	//data := []Person{{"John", "Doe", 27}, {"Leeroy", "Jenkins", 19}}
+
+	vals := []interface{}{}
+	for _, row := range concentration {
+		vals = append(vals, row.Owner, row.Id_injection, row.Drug, row.Dt, row.C, row.CC, row.CCT, row.CT)
+	}
+
+	sqlStr := `INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s`
+	sqlStr = ReplaceSQL(sqlStr, "(?, ?, ?, ?, ?, ?, ?, ?)", len(concentration))
+
+	//Prepare and execute the statement
+	stmt, _ := r.db2.Prepare(sqlStr)
+	_, err := stmt.Exec(vals...)
+
+	return err
+
+	/*valueStrings := []string{}
+	valueArgs := []interface{}{}
+	for _, w := range concentration {
+		valueStrings = append(valueStrings, "(?, ?, ?, ?)")
+
+		valueArgs = append(valueArgs, w.Owner)
+		valueArgs = append(valueArgs, w.Id_injection)
+		valueArgs = append(valueArgs, w.Drug)
+		valueArgs = append(valueArgs, w.Dt)
+	}
+	smt := "INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s"
+	smt = fmt.Sprintf(smt, strings.Join(valueStrings, ","))
+	fmt.Println("smttt:", smt)
+	tx, _ := r.db2.Begin()
+	_, err := tx.Exec(smt, valueArgs...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil*/
+
+	/*
+		valueStrings := make([]string, 0, len(concentration))
+		valueArgs := make([]interface{}, 0, len(concentration) * 8)
+		i := 0
+		for _, post := range concentration {
+			valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)", i*3+1, i*3+2, i*3+3, i*3+4, i*3+5, i*3+6, i*3+7, i*3+8))
+			//valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)"))
+			valueArgs = append(valueArgs, post.Owner)
+			valueArgs = append(valueArgs, post.Id_injection)
+			valueArgs = append(valueArgs, post.Drug)
+			valueArgs = append(valueArgs, post.Dt)
+			valueArgs = append(valueArgs, post.C)
+			valueArgs = append(valueArgs, post.CC)
+			valueArgs = append(valueArgs, post.CCT)
+			valueArgs = append(valueArgs, post.CT)
+			i++
+		}
+
+		stmt := fmt.Sprintf("INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s", strings.Join(valueStrings, ","))
+
+		fmt.Println(stmt)
+		_, err :=  r.db2.Exec(stmt, valueArgs...)*/
+
+	//return err
+
+	/*tx, _ := r.db.DB().Begin()
+
+	for _, item := range concentration {
+		_, err := tx.Insert("concentration", dbx.Params{
+			"owner": item.Owner,
+			"id_injection": item.Id_injection,
+			"drug": item.Drug,
+			"dt" : item.Dt,
+			"c" : item.C,
+			"cc" : item.CC,
+			"cct" : item.CCT,
+			"ct": item.CT,
+		}).Execute()
+		if err != nil  {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	tx.Commit()
+
+	return nil*/
 }
 
 func (r repository) GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error) {
@@ -121,12 +212,24 @@ func (r repository) GetConcentration(ctx context.Context, owner string, drug str
 	//.Delete("concentration",dbx.HashExp{"id_injection": id}).All(&concentration)
 }
 
-func (r repository) DeleteConcentration(ctx context.Context, id string) error {
+func (r repository) DeleteConcentration(ctx context.Context, owner string, id string) error {
 	var concentration []entity.Concentration
-	return r.db.With(ctx).Delete("concentration", dbx.HashExp{"id_injection": id}).All(&concentration)
+	return r.db.With(ctx).Delete("concentration", dbx.HashExp{"id_injection": id, "owner": owner}).All(&concentration)
 
 }
 
 func (r repository) CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error {
 	return r.db.With(ctx).Model(&injectionDose).Insert()
+}
+
+func ReplaceSQL(stmt, pattern string, len int) string {
+	pattern += ","
+	stmt = fmt.Sprintf(stmt, strings.Repeat(pattern, len))
+	n := 0
+	for strings.IndexByte(stmt, '?') != -1 {
+		n++
+		param := "$" + strconv.Itoa(n)
+		stmt = strings.Replace(stmt, "?", param, 1)
+	}
+	return strings.TrimSuffix(stmt, ",")
 }

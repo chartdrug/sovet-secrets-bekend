@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/go-ozzo/ozzo-dbx"
+	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/go-ozzo/ozzo-routing/v2/content"
 	"github.com/go-ozzo/ozzo-routing/v2/cors"
@@ -44,24 +44,32 @@ func main() {
 	}
 
 	// connect to the database
-	db, err := dbx.MustOpen("postgres", cfg.DSN)
+	//db, err := dbx.MustOpen("postgres", cfg.DSN)
+	db, err := dbx.Open("postgres", cfg.DSN)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(-1)
 	}
 	db.QueryLogFunc = logDBQuery(logger)
 	db.ExecLogFunc = logDBExec(logger)
+
 	defer func() {
 		if err := db.Close(); err != nil {
 			logger.Error(err)
 		}
 	}()
 
+	db2, err1 := sql.Open("postgres", cfg.DSN)
+	if err1 != nil {
+		logger.Error(err1)
+		os.Exit(-1)
+	}
+
 	// build HTTP server
 	address := fmt.Sprintf(":%v", cfg.ServerPort)
 	hs := &http.Server{
 		Addr:    address,
-		Handler: buildHandler(logger, dbcontext.New(db), cfg),
+		Handler: buildHandler(logger, dbcontext.New(db), db2, cfg),
 	}
 
 	// start the HTTP server with graceful shutdown
@@ -74,7 +82,7 @@ func main() {
 }
 
 // buildHandler sets up the HTTP routing and builds an HTTP handler.
-func buildHandler(logger log.Logger, db *dbcontext.DB, cfg *config.Config) http.Handler {
+func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.Config) http.Handler {
 	router := routing.New()
 
 	router.Use(
@@ -111,7 +119,7 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, cfg *config.Config) http.
 	)
 
 	injections.RegisterHandlers(rg.Group(""),
-		injections.NewService(injections.NewRepository(db, logger), logger),
+		injections.NewService(injections.NewRepository(db, db2, logger), logger),
 		authHandler, logger,
 	)
 
