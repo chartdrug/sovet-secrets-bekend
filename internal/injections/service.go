@@ -74,6 +74,8 @@ func (s service) GetAllDose(ctx context.Context, owner string, sDate string, fDa
 	if err != nil {
 		return nil, err
 	}
+	// добавляем + 1 день
+	date2 = date2.AddDate(0, 0, 1)
 	//fmt.Println(date2)
 
 	items, err := s.repo.GetByDate(ctx, owner, date1, date2)
