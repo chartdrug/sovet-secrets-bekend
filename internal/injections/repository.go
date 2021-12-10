@@ -6,10 +6,12 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/dbcontext"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"time"
 )
 
 type Repository interface {
 	Get(ctx context.Context, id string) ([]entity.Injection, error)
+	GetByDate(ctx context.Context, id string, sd time.Time, ed time.Time) ([]entity.Injection, error)
 	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
 	GetAllDose(ctx context.Context, owner string) ([]entity.Injection_Dose, error)
 	GetOne(ctx context.Context, id string) (entity.Injection, error)
@@ -36,6 +38,13 @@ func NewRepository(db *dbcontext.DB, logger log.Logger) Repository {
 func (r repository) Get(ctx context.Context, owner string) ([]entity.Injection, error) {
 	var injection []entity.Injection
 	err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).OrderBy("dt desc").All(&injection)
+	return injection, err
+}
+
+func (r repository) GetByDate(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Injection, error) {
+	var injection []entity.Injection
+	//err := r.db.With(ctx).Select().Where(dbx.HashExp{"owner": owner}).OrderBy("dt desc").All(&injection)
+	err := r.db.With(ctx).NewQuery("select * from injection where owner = {:owner} and dt >= {:sd} and dt <= {:ed} order by dt desc").Bind(dbx.Params{"owner": owner, "sd": sd, "ed": ed}).All(&injection)
 	return injection, err
 }
 

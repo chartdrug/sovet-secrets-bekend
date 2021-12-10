@@ -45,7 +45,7 @@ func (r resource) getAllDose(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		injection, err := r.service.GetAllDose(c.Request.Context(), claims["id"].(string))
+		injection, err := r.service.GetAllDose(c.Request.Context(), claims["id"].(string), c.Param("sDate"), c.Param("fDate"))
 		if err != nil {
 			return err
 		}

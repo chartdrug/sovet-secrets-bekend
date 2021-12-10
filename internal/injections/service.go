@@ -7,11 +7,12 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"math"
+	"time"
 )
 
 // Service encapsulates usecase logic for albums.
 type Service interface {
-	GetAllDose(ctx context.Context, owner string) ([]InjectionModel, error)
+	GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error)
 	Getinj(ctx context.Context, id string, owner string) (Points, error)
 	GetinjReort(ctx context.Context, owner string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
@@ -60,9 +61,22 @@ func NewService(repo Repository, logger log.Logger) Service {
 }
 
 // Get returns the album with the specified the album ID.
-func (s service) GetAllDose(ctx context.Context, owner string) ([]InjectionModel, error) {
+func (s service) GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error) {
 	//logger := s.logger.With(ctx, "owner", owner)
-	items, err := s.repo.Get(ctx, owner)
+
+	date1, err := time.Parse("2006-01-02", sDate)
+	//fmt.Println(date1)
+	if err != nil {
+		return nil, err
+	}
+
+	date2, err := time.Parse("2006-01-02", fDate)
+	if err != nil {
+		return nil, err
+	}
+	//fmt.Println(date2)
+
+	items, err := s.repo.GetByDate(ctx, owner, date1, date2)
 	if err != nil {
 		return nil, err
 	}
