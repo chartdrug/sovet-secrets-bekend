@@ -42,10 +42,10 @@ type InjectionModel struct {
 
 type PointValue struct {
 	Drug string  `json:"drug"`
-	C    float64 `json:"C"`
-	CC   float64 `json:"CC"`
+	C    float64 `json:"-"`
+	CC   float64 `json:"-"`
 	CCT  float64 `json:"CCT"`
-	CT   float64 `json:"CT"`
+	CT   float64 `json:"-"`
 	R    float64 `json:"-"`
 	//CO  float64
 	//COT  float64

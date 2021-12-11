@@ -72,6 +72,14 @@ func (r resource) getinj(c *routing.Context) error {
 			return err
 		}
 
+		//оставляем только каждые 15 минут
+		for i := len(injection.Points) - 1; i >= 0; i-- {
+			if i%15 != 0 {
+				injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
+			}
+		}
+
+		//удаляем всё что меньше 0.2 и делаем округелние
 		for i := len(injection.Points) - 1; i >= 0; i-- {
 			//fmt.Println("test2")
 			application := injection.Points[i]
@@ -81,10 +89,10 @@ func (r resource) getinj(c *routing.Context) error {
 				injection.Points = append(injection.Points[:i],
 					injection.Points[i+1:]...)
 			} else {
-				for _, item := range application.PointValues {
-					item.CCT = math.Round(item.CCT*1000) / 1000
+				for y := 0; y < len(application.PointValues); y++ {
+					application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
 				}
-				application.PointValues[0].CCT = math.Round(application.PointValues[0].CCT*1000) / 1000
+
 			}
 		}
 
@@ -120,7 +128,9 @@ func (r resource) getReort(c *routing.Context) error {
 				injection.Points = append(injection.Points[:i],
 					injection.Points[i+1:]...)
 			} else {
-				application.PointValues[0].CCT = math.Round(application.PointValues[0].CCT*100) / 100
+				for _, item := range application.PointValues {
+					item.CCT = math.Round(item.CCT*100) / 100
+				}
 			}
 		}
 
