@@ -100,12 +100,24 @@ func (r repository) CreateInjection(ctx context.Context, injection entity.Inject
 func (r repository) SaveConcentration(ctx context.Context, concentration []entity.Concentration) error {
 
 	vals := []interface{}{}
-	for _, row := range concentration {
-		vals = append(vals, row.Owner, row.Id_injection, row.Drug, row.Dt, row.C, row.CC, row.CCT, row.CT)
-	}
+	count := 0
+	//сохраняем каждую 15ю минуту
+	for i := 1; i < len(concentration); i = i + 15 {
+		count++
+		vals = append(vals, concentration[i].Owner, concentration[i].Id_injection, concentration[i].Drug,
+			concentration[i].Dt, concentration[i].C, concentration[i].CC, concentration[i].CCT, concentration[i].CT)
 
+	}
 	sqlStr := `INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s`
-	sqlStr = ReplaceSQL(sqlStr, "(?, ?, ?, ?, ?, ?, ?, ?)", len(concentration))
+	sqlStr = ReplaceSQL(sqlStr, "(?, ?, ?, ?, ?, ?, ?, ?)", count)
+	/*
+		for _, row := range concentration {
+			vals = append(vals, row.Owner, row.Id_injection, row.Drug, row.Dt, row.C, row.CC, row.CCT, row.CT)
+		}
+
+		sqlStr := `INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s`
+		sqlStr = ReplaceSQL(sqlStr, "(?, ?, ?, ?, ?, ?, ?, ?)", len(concentration))
+	*/
 
 	//Prepare and execute the statement
 	stmt, _ := r.db2.Prepare(sqlStr)
