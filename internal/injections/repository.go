@@ -129,11 +129,10 @@ func (r repository) GetConcentration(ctx context.Context, owner string, drug str
 			Dt int64
 			CCT int64
 		}*/
-	/*q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
-	"from concentration where owner = '3a56fd3a-e7ee-11eb-ba80-0242ac130004' " +
-	"and drug = '00000001-0003-0000-0000-ff00ff00ff00' " +
-	"group by drug,round(dt/(1000*60*5))*(1000*60*5) order by drug,dt")*/
-	q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*5))*(1000*60*5) AS BIGINT) as dt from concentration where id_injection = '029ef562-c5f5-48a8-9ebb-eabd148e8c70'\n")
+	q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
+		"from concentration where owner = {:owner} " +
+		"group by 1,2 order by 1,2").Bind(dbx.Params{"owner": owner})
+	//q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*5))*(1000*60*5) AS BIGINT) as dt from concentration where id_injection = '029ef562-c5f5-48a8-9ebb-eabd148e8c70'\n")
 	err := q.All(&concentration)
 	return concentration, err
 	//return r.db.With(ctx).NewQuery("wqw")
