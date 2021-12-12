@@ -114,22 +114,26 @@ func (r resource) getReort(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		injection, err := r.service.GetinjReort(c.Request.Context(), claims["id"].(string))
+		injection, err := r.service.GetinjReort(c.Request.Context(), claims["id"].(string), c.Param("sDate"), c.Param("fDate"))
 		if err != nil {
 			return err
 		}
 
+		first := true
 		for i := len(injection.Points) - 1; i >= 0; i-- {
+
 			//fmt.Println("test2")
 			application := injection.Points[i]
+			//fmt.Println(application.PointValues[0].CCT )
 			// Condition to decide if current element has to be deleted:
-			if application.PointValues[0].CCT < 0.2 {
+			if application.PointValues[0].CCT < 0.2 && first {
 				//fmt.Println("server %v\n", application.PointValues[0].CCT)
 				injection.Points = append(injection.Points[:i],
 					injection.Points[i+1:]...)
 			} else {
-				for _, item := range application.PointValues {
-					item.CCT = math.Round(item.CCT*100) / 100
+				first = false
+				for y := 0; y < len(application.PointValues); y++ {
+					application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
 				}
 			}
 		}

@@ -8,6 +8,7 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -15,7 +16,7 @@ import (
 type Service interface {
 	GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error)
 	Getinj(ctx context.Context, id string, owner string) (Points, error)
-	GetinjReort(ctx context.Context, owner string) (Points, error)
+	GetinjReort(ctx context.Context, owner string, sDate string, fDate string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
@@ -106,10 +107,23 @@ func (s service) GetAllDose(ctx context.Context, owner string, sDate string, fDa
 	return result, nil
 }
 
-func (s service) GetinjReort(ctx context.Context, owner string) (Points, error) {
+func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fDate string) (Points, error) {
 	result := Points{}
 
-	ConcentrationDrugs, errConcentrationDrugs := s.repo.GetConcentrationDrugs(ctx, owner)
+	date1, err := time.Parse("2006-01-02", sDate)
+	//fmt.Println(date1)
+	if err != nil {
+		return Points{}, err
+	}
+
+	date2, err := time.Parse("2006-01-02", fDate)
+	if err != nil {
+		return Points{}, err
+	}
+	// добавляем + 1 день
+	date2 = date2.AddDate(0, 0, 1)
+
+	ConcentrationDrugs, errConcentrationDrugs := s.repo.GetConcentrationDrugs(ctx, owner, date1, date2)
 
 	if errConcentrationDrugs != nil {
 		return Points{}, errConcentrationDrugs
@@ -119,69 +133,112 @@ func (s service) GetinjReort(ctx context.Context, owner string) (Points, error) 
 		result.Drugs = append(result.Drugs, itemConcentrationDrugs.Drug)
 	}
 
-	Concentration, errConcentration := s.repo.GetConcentration(ctx, owner, "11")
+	Concentration, errConcentration := s.repo.GetConcentration(ctx, owner, "", date1, date2)
 
 	if errConcentration != nil {
 		return Points{}, errConcentration
 	}
-	for _, itemConcentration := range Concentration {
-		point := entity.Point{}
-		point.Dt = itemConcentration.Dt
 
-		point.PointValues = append(point.PointValues, entity.PointValue{})
+	var preDt int64 = 0
+	var point entity.Point
 
-		point.PointValues[0].Drug = "SUMM"
-		point.PointValues[0].CCT = 0
+	for i := 0; i < len(Concentration); i++ {
+		fmt.Println("start")
+		fmt.Println(i)
+
+		if preDt != Concentration[i].Dt {
+			fmt.Println("preDt != Concentration[i].Dt ")
+			//новая дата или первый раз
+
+			if preDt != 0 {
+				//если не первый раз сюда попали - последний блок всегда теряем ;)
+				fmt.Println("append(result.Points, point)")
+				if len(point.PointValues) != len(result.Drugs)+1 {
+					fmt.Println("len(point.PointValues) != len(result.Drugs)")
+					var existsDrug = false
+					for _, Drug := range result.Drugs {
+						for _, pV := range point.PointValues {
+							if pV.Drug == Drug {
+								existsDrug = true
+							}
+						}
+						if !existsDrug {
+							pValue := entity.PointValue{}
+
+							pValue.Drug = Drug
+							pValue.CCT = 0
+							point.PointValues = append(point.PointValues, pValue)
+						}
+					}
+				}
+				result.Points = append(result.Points, point)
+			}
+			point = entity.Point{}
+			point.Dt = Concentration[i].Dt
+
+			point.PointValues = append(point.PointValues, entity.PointValue{})
+
+			point.PointValues[0].Drug = "SUMM"
+			point.PointValues[0].CCT = 0
+
+			//fmt.Println(len(point.PointValues))
+		}
+		//fmt.Println(len(point.PointValues))
+		fmt.Println("pValue := entity.PointValue{}")
 
 		pValue := entity.PointValue{}
 
-		pValue.Drug = itemConcentration.Drug
-		pValue.CCT = itemConcentration.CCT
+		pValue.Drug = Concentration[i].Drug
+		pValue.CCT = Concentration[i].CCT
 
 		point.PointValues[0].CCT += pValue.CCT
 
 		point.PointValues = append(point.PointValues, pValue)
 
-		result.Points = append(result.Points, point)
+		//result.Points = append(result.Points, point)
 
-		//fmt.Println(itemConcentration.Drug)
+		preDt = Concentration[i].Dt
 	}
-
 	/*
-		for i := 0; i < 3; i++ {
+		for _, itemConcentrationDrugs := range ConcentrationDrugs {
 
-			point := entity.Point{}
+			if errConcentration != nil {
+				return Points{}, errConcentration
+			}
+			for _, itemConcentration := range Concentration {
 
-			point.Dt = int64(1625079780000 + (i * 10000000))
+					point := entity.Point{}
+					point.Dt = itemConcentration.Dt
 
-			point.PointValues = append(point.PointValues, entity.PointValue{})
+					point.PointValues = append(point.PointValues, entity.PointValue{})
 
-			point.PointValues[0].Drug = "SUMM"
-			point.PointValues[0].C = 0
-			point.PointValues[0].CC = 0
-			point.PointValues[0].CCT = 0
-			point.PointValues[0].CT = 0
+					point.PointValues[0].Drug = "SUMM"
+					point.PointValues[0].CCT = 0
 
-			pValue := entity.PointValue{}
+					pValue := entity.PointValue{}
 
-			pValue.Drug = "00000001-0003-0000-0000-ff00ff00ff00"
-			pValue.C = float64(i)
-			pValue.CC = float64(i)
-			pValue.CCT = float64(i)
-			pValue.CT = float64(i)
+					pValue.Drug = itemConcentration.Drug
+					pValue.CCT = itemConcentration.CCT
 
-			point.PointValues[0].C += pValue.C
-			point.PointValues[0].CC += pValue.CC
-			point.PointValues[0].CCT += pValue.CCT
-			point.PointValues[0].CT += pValue.CT
+					//point.PointValues[0].CCT += pValue.CCT
 
-			point.PointValues = append(point.PointValues, pValue)
+					point.PointValues = append(point.PointValues, pValue)
 
-			result.Points = append(result.Points, point)
+					result.Points = append(result.Points, point)
+
+				//fmt.Println(itemConcentration.Drug)
+			}
 
 		}
 	*/
+	//sort.Sort(result.Points)
+
 	return result, nil
+}
+
+func contains(s []string, searchterm string) bool {
+	i := sort.SearchStrings(s, searchterm)
+	return i < len(s) && s[i] == searchterm
 }
 
 func (s service) Getinj(ctx context.Context, id string, owner string) (Points, error) {

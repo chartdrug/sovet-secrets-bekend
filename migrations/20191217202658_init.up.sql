@@ -212,3 +212,5 @@ INSERT INTO spr VALUES
 ('sport',40,26,'Спортивная ходьба','','');
 
 update spr set name_eng = name_ru;
+
+CREATE EXTENSION IF NOT EXISTS tablefunc;

@@ -26,8 +26,8 @@ type Repository interface {
 	DeleteConcentration(ctx context.Context, owner string, id string) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
-	GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error)
-	GetConcentration(ctx context.Context, owner string, drug string) ([]entity.Concentration, error)
+	GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
+	GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 }
 
 type repository struct {
@@ -127,28 +127,21 @@ func (r repository) SaveConcentration(ctx context.Context, concentration []entit
 
 }
 
-func (r repository) GetConcentrationDrugs(ctx context.Context, owner string) ([]entity.Concentration, error) {
+func (r repository) GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error) {
 	var concentrationDrugs []entity.Concentration
-	err := r.db.With(ctx).Select("drug").Where(dbx.HashExp{"owner": owner}).Distinct(true).All(&concentrationDrugs)
+	//err := r.db.With(ctx).Select("drug").Where(dbx.HashExp{"owner": owner}).Distinct(true).All(&concentrationDrugs)
+	err := r.db.With(ctx).NewQuery("select distinct drug " +
+		"from concentration where owner = {:owner} and dt >= {:sd} and dt <= {:ed}").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000}).All(&concentrationDrugs)
 	return concentrationDrugs, err
 }
 
-func (r repository) GetConcentration(ctx context.Context, owner string, drug string) ([]entity.Concentration, error) {
+func (r repository) GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error) {
 	var concentration []entity.Concentration
-	/*
-		var concentration []struct {
-			Drug string
-			Dt int64
-			CCT int64
-		}*/
 	q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
-		"from concentration where owner = {:owner} " +
-		"group by 1,2 order by 1,2").Bind(dbx.Params{"owner": owner})
-	//q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*5))*(1000*60*5) AS BIGINT) as dt from concentration where id_injection = '029ef562-c5f5-48a8-9ebb-eabd148e8c70'\n")
+		"from concentration where owner = {:owner} and dt >= {:sd} and dt <= {:ed}" +
+		"group by 1,2 order by 2").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000})
 	err := q.All(&concentration)
 	return concentration, err
-	//return r.db.With(ctx).NewQuery("wqw")
-	//.Delete("concentration",dbx.HashExp{"id_injection": id}).All(&concentration)
 }
 
 func (r repository) DeleteConcentration(ctx context.Context, owner string, id string) error {
