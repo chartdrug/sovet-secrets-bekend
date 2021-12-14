@@ -20,6 +20,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 
 	// the following endpoints require a valid JWT
 	r.Get("/api/profile", res.get)
+	r.Get("/api/historylogin", res.getHistoryLogin)
 
 }
 
@@ -45,6 +46,29 @@ func (r resource) get(c *routing.Context) error {
 		}
 
 		return c.Write(profile)
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) getHistoryLogin(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		HistoryLogin, err := r.service.GetHistoryLogin(c.Request.Context(), claims["id"].(string))
+		if err != nil {
+			return err
+		}
+
+		return c.Write(HistoryLogin)
 	} else {
 		return err
 	}

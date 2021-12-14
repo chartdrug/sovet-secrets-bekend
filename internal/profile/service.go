@@ -11,6 +11,7 @@ import (
 // Service encapsulates usecase logic for albums.
 type Service interface {
 	Get(ctx context.Context, id string) (Users, error)
+	GetHistoryLogin(ctx context.Context, id string) ([]entity.HistoryLogin, error)
 	Create(ctx context.Context, input CreateUser) (Users, error)
 	GetByLogin(ctx context.Context, login string) (Users, error)
 	GetByEmail(ctx context.Context, email string) (Users, error)
@@ -57,6 +58,14 @@ func (s service) Get(ctx context.Context, id string) (Users, error) {
 		return Users{}, err
 	}
 	return Users{users}, nil
+}
+
+func (s service) GetHistoryLogin(ctx context.Context, id string) ([]entity.HistoryLogin, error) {
+	HistoryLogin, err := s.repo.GetHistoryLogin(ctx, id)
+	if err != nil {
+		return []entity.HistoryLogin{}, err
+	}
+	return HistoryLogin, nil
 }
 
 func (s service) GetByLogin(ctx context.Context, login string) (Users, error) {

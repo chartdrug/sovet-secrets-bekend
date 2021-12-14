@@ -10,6 +10,7 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, id string) (entity.Users, error)
+	GetHistoryLogin(ctx context.Context, id string) ([]entity.HistoryLogin, error)
 	GetByLogin(ctx context.Context, login string) (entity.Users, error)
 	GetByEmail(ctx context.Context, email string) (entity.Users, error)
 	Create(ctx context.Context, album entity.Users) error
@@ -28,6 +29,18 @@ func (r repository) Get(ctx context.Context, id string) (entity.Users, error) {
 	var user entity.Users
 	err := r.db.With(ctx).Select().Model(id, &user)
 	return user, err
+}
+
+func (r repository) GetHistoryLogin(ctx context.Context, id string) ([]entity.HistoryLogin, error) {
+	var HistoryLogin []entity.HistoryLogin
+	err := r.db.With(ctx).
+		Select().
+		Where(dbx.HashExp{"id_user": id}).
+		OrderBy("date_event desc").
+		//Offset(int64(offset)).
+		//Limit(int64(limit)).
+		All(&HistoryLogin)
+	return HistoryLogin, err
 }
 
 func (r repository) Create(ctx context.Context, antro entity.Users) error {
