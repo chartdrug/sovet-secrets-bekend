@@ -9,11 +9,11 @@ type Users struct {
 	Passwd         string
 	Email          string    `json:"email"`
 	DateRegistered time.Time `json:"date_registered"`
-	DateLastlogin  time.Time
+	DateLastlogin  time.Time `json:"date_lastlogin"`
 	Sex            string    `json:"sex"`
 	Birthday       time.Time `json:"birthday"`
-	Height         float64   `json:"height"`
-	Weight         float64   `json:"weight"`
+	//	Height         float64   `json:"-"`
+	//	Weight         float64   `json:"-"`
 }
 
 // GetID returns the user ID.

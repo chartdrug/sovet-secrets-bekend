@@ -16,10 +16,10 @@ CREATE TABLE users (
 
 
    sex character varying(1) NOT NULL,
-   birthday DATE NOT NULL,
+   birthday DATE NOT NULL/*,
 
    height decimal not null,
-   weight decimal not null
+   weight decimal not null*/
 );
 
 ALTER TABLE ONLY users

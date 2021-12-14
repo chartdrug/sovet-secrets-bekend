@@ -13,6 +13,7 @@ type Service interface {
 	Get(ctx context.Context, id string) (Users, error)
 	Create(ctx context.Context, input CreateUser) (Users, error)
 	GetByLogin(ctx context.Context, login string) (Users, error)
+	GetByEmail(ctx context.Context, email string) (Users, error)
 }
 
 // Album represents the data about an album.
@@ -60,6 +61,14 @@ func (s service) Get(ctx context.Context, id string) (Users, error) {
 
 func (s service) GetByLogin(ctx context.Context, login string) (Users, error) {
 	users, err := s.repo.GetByLogin(ctx, login)
+	if err != nil {
+		return Users{}, err
+	}
+	return Users{users}, nil
+}
+
+func (s service) GetByEmail(ctx context.Context, email string) (Users, error) {
+	users, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return Users{}, err
 	}

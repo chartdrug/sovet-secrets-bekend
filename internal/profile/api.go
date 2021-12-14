@@ -70,6 +70,14 @@ func (r resource) create(c *routing.Context) error {
 		return errors.BadRequest("login exists")
 	}
 
+	user1, err1 = r.service.GetByEmail(c.Request.Context(), input.Email)
+	//fmt.Println(input.Email)
+	//fmt.Println(user1.Email)
+
+	if err1 == nil && user1.Email == input.Email {
+		return errors.BadRequest("Email exists")
+	}
+
 	user, err := r.service.Create(c.Request.Context(), input)
 	if err != nil {
 		return err
