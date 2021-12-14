@@ -10,7 +10,7 @@ import (
 
 const (
 	defaultServerPort         = 8080
-	defaultJWTExpirationHours = 72
+	defaultJWTExpirationHours = 1
 )
 
 // Config represents an application configuration.
