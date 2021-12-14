@@ -12,6 +12,7 @@ import (
 type Repository interface {
 	// Get returns the album with the specified album ID.
 	Get(ctx context.Context, login string, password string) (entity.Users, error)
+	UpdateTimeLastLogin(ctx context.Context, id string) error
 }
 
 // repository persists albums in database
@@ -35,4 +36,9 @@ func (r repository) Get(ctx context.Context, login string, password string) (ent
 	//.Bind(dbx.Params{"id": 100}).One(&user)
 	//Model(login, &user)
 	return user, err
+}
+
+func (r repository) UpdateTimeLastLogin(ctx context.Context, id string) error {
+	_, err := r.db.With(ctx).Update("users", dbx.Params{"date_lastlogin": "now()"}, dbx.NewExp("id={:id}", dbx.Params{"id": id})).Execute()
+	return err
 }

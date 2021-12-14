@@ -44,32 +44,39 @@ func NewService(signingKey string, tokenExpiration int, logger log.Logger, repo 
 // Otherwise, an error is returned.
 func (s service) Login(ctx context.Context, username, password string) (string, error) {
 
-	if user := s.authenticate(ctx, username, password); user.Login != "" {
+	user, err := s.authenticate(ctx, username, password)
+	if err != nil {
+		return "", errors.Unauthorized(err.Error())
+	}
+	if user.Login != "" {
 		return s.generateJWT(user)
+	} else {
+		return "", errors.Unauthorized("")
+
 	}
 
-	return "", errors.Unauthorized("")
 }
 
 // authenticate authenticates a user using username and password.
 // If username and password are correct, an identity is returned. Otherwise, nil is returned.
-func (s service) authenticate(ctx context.Context, username, password string) User {
+func (s service) authenticate(ctx context.Context, username, password string) (User, error) {
 	logger := s.logger.With(ctx, "user", username)
-
-	// TODO: the following authentication logic is only for demo purpose
-	//	if username == "demo" && password == "pass" {
-	//		logger.Infof("authentication successful")
-	//		return entity.User{ID: "100", Name: "demo"}
-	//	}
 
 	user, err := s.repo.Get(ctx, username, password)
 	if user.GetLogn() != "" && err == nil {
 		logger.Infof("authentication OK username=" + username)
-		return User{user}
+		//сохранить дату логина
+		errU := s.repo.UpdateTimeLastLogin(ctx, user.ID)
+		if err != errU {
+			return User{}, errU
+		}
+		//+ запись истории
+
+		return User{user}, nil
 	}
 
 	logger.Infof("authentication failed username=" + username)
-	return User{}
+	return User{}, err
 }
 
 // generateJWT generates a JWT that encodes an identity.
