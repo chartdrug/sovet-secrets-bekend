@@ -6,7 +6,7 @@ import (
 )
 
 func GetInfo(ip string) (error, string, string, string) {
-	db, err := ip2location.OpenDB("config/IP2LOCATION-LITE-DB3.BIN")
+	db, err := ip2location.OpenDB("./config/IP2LOCATION-LITE-DB3.BIN")
 
 	if err != nil {
 		fmt.Print(err)
