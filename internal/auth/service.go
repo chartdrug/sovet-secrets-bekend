@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"time"
 )
@@ -13,7 +14,7 @@ import (
 type Service interface {
 	// authenticate authenticates a user using username and password.
 	// It returns a JWT token if authentication succeeds. Otherwise, an error is returned.
-	Login(ctx context.Context, username, password string) (string, error)
+	Login(ctx context.Context, username, password string, ip string) (string, error)
 }
 
 type User struct {
@@ -42,9 +43,9 @@ func NewService(signingKey string, tokenExpiration int, logger log.Logger, repo 
 
 // Login authenticates a user and generates a JWT token if authentication succeeds.
 // Otherwise, an error is returned.
-func (s service) Login(ctx context.Context, username, password string) (string, error) {
+func (s service) Login(ctx context.Context, username, password string, ip string) (string, error) {
 
-	user, err := s.authenticate(ctx, username, password)
+	user, err := s.authenticate(ctx, username, password, ip)
 	if err != nil {
 		return "", errors.Unauthorized(err.Error())
 	}
@@ -59,7 +60,7 @@ func (s service) Login(ctx context.Context, username, password string) (string, 
 
 // authenticate authenticates a user using username and password.
 // If username and password are correct, an identity is returned. Otherwise, nil is returned.
-func (s service) authenticate(ctx context.Context, username, password string) (User, error) {
+func (s service) authenticate(ctx context.Context, username, password string, ip string) (User, error) {
 	logger := s.logger.With(ctx, "user", username)
 
 	user, err := s.repo.Get(ctx, username, password)
@@ -71,6 +72,14 @@ func (s service) authenticate(ctx context.Context, username, password string) (U
 			return User{}, errU
 		}
 		//+ запись истории
+		errIp, Country_, Region_, City_ := utils.GetInfo(ip)
+		if errIp != nil {
+			logger.Error("problem with utils.GetInfo ip=" + ip + ", err=" + errIp.Error())
+		}
+		errH := s.repo.saveHistoryLogin(ctx, entity.HistoryLogin{IdUser: user.ID, DateEvent: time.Now(), IpAddress: ip, Country: Country_, Region: Region_, City: City_})
+		if errH != nil {
+			return User{}, errH
+		}
 
 		return User{user}, nil
 	}

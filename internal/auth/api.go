@@ -23,8 +23,7 @@ func login(service Service, logger log.Logger) routing.Handler {
 			logger.With(c.Request.Context()).Errorf("invalid request: %v", err)
 			return errors.BadRequest("")
 		}
-
-		token, err := service.Login(c.Request.Context(), req.Username, req.Password)
+		token, err := service.Login(c.Request.Context(), req.Username, req.Password, c.Request.Header.Get("X-Forwarded-For"))
 		if err != nil {
 			return err
 		}

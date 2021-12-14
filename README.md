@@ -242,6 +242,9 @@ docker exec -it server bash
 
 tail -n 5 /var/log/app/server.log 
 
+sudo cd /var/log/nginx
+
+
 
 ```
 

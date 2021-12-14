@@ -16,6 +16,15 @@ type Users struct {
 	//	Weight         float64   `json:"-"`
 }
 
+type HistoryLogin struct {
+	IdUser    string
+	DateEvent time.Time `json:"DateEvent"`
+	IpAddress string    `json:"IpAddress"`
+	Country   string    `json:"Country"`
+	Region    string    `json:"Region"`
+	City      string    `json:"City"`
+}
+
 // GetID returns the user ID.
 func (u Users) GetID() string {
 	return u.ID

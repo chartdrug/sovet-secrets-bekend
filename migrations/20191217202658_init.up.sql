@@ -214,3 +214,13 @@ INSERT INTO spr VALUES
 update spr set name_eng = name_ru;
 
 CREATE EXTENSION IF NOT EXISTS tablefunc;
+
+create table history_login(
+      id_user uuid NOT NULL,
+      date_event timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      ip_address TEXT,
+     Country TEXT,
+     Region TEXT,
+     City TEXT
+);
+CREATE INDEX idx_history_login_user ON history_login(id_user);
