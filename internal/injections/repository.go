@@ -102,6 +102,7 @@ func (r repository) SaveConcentration(ctx context.Context, concentration []entit
 	vals := []interface{}{}
 	count := 0
 	//сохраняем каждую 15ю минуту
+	//fmt.Println(concentration[0].Drug)
 	for i := 1; i < len(concentration); i = i + 15 {
 		count++
 		vals = append(vals, concentration[i].Owner, concentration[i].Id_injection, concentration[i].Drug,

@@ -3,6 +3,18 @@ package entity
 import "time"
 
 // User represents a user.
+type UsersRest struct {
+	ID             string
+	Login          string `json:"login"`
+	Passwd         string
+	Email          string    `json:"email"`
+	DateRegistered time.Time `json:"date_registered"`
+	DateLastlogin  time.Time `json:"date_lastlogin"`
+	Sex            string    `json:"sex"`
+	Birthday       time.Time `json:"birthday"`
+	TypeSports     []string  `json:"typesports"`
+}
+
 type Users struct {
 	ID             string
 	Login          string `json:"login"`
@@ -12,8 +24,7 @@ type Users struct {
 	DateLastlogin  time.Time `json:"date_lastlogin"`
 	Sex            string    `json:"sex"`
 	Birthday       time.Time `json:"birthday"`
-	//	Height         float64   `json:"-"`
-	//	Weight         float64   `json:"-"`
+	TypeSports     string    `json:"typesports"`
 }
 
 type HistoryLogin struct {

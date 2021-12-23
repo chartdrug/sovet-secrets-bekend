@@ -9,6 +9,8 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"math"
 	"sort"
+	//"sync"
+	"golang.org/x/sync/errgroup"
 	"time"
 )
 
@@ -643,33 +645,48 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 		return Points{}, errDelete
 	}
 	//сохроняем в БД
-	arryaConcentration := []entity.Concentration{}
 
-	for _, itemPoint := range result.Points {
+	errGrp, _ := errgroup.WithContext(context.Background())
 
-		for _, itemPoints := range itemPoint.PointValues {
+	var arryaConcentration []entity.Concentration
+	for _, Drug := range result.Drugs {
+		logger.Infof("save injection Drugs = " + Drug)
+		arryaConcentration = []entity.Concentration{}
 
-			if itemPoints.Drug != "SUMM" {
-				arryaConcentration = append(arryaConcentration, entity.Concentration{
-					Owner:        owner,
-					Id_injection: id,
-					Drug:         itemPoints.Drug,
-					Dt:           itemPoint.Dt,
-					C:            itemPoints.C,
-					CC:           itemPoints.CC,
-					CCT:          itemPoints.CCT,
-					CT:           itemPoints.CT,
-				})
+		for _, itemPoint := range result.Points {
+
+			for _, itemPoints := range itemPoint.PointValues {
+
+				if itemPoints.Drug == Drug {
+					arryaConcentration = append(arryaConcentration, entity.Concentration{
+						Owner:        owner,
+						Id_injection: id,
+						Drug:         itemPoints.Drug,
+						Dt:           itemPoint.Dt,
+						C:            itemPoints.C,
+						CC:           itemPoints.CC,
+						CCT:          itemPoints.CCT,
+						CT:           itemPoints.CT,
+					})
+				}
+
 			}
-
 		}
+		logger.Infof("arryaConcentration row to save = " + fmt.Sprintf("%v", len(arryaConcentration)))
+
+		errGrp.Go(func() error { return s.repo.SaveConcentration(ctx, arryaConcentration) })
+
+		//errSave := s.repo.SaveConcentration(ctx, arryaConcentration)
+		//if errSave != nil {
+		//	return Points{}, errSave
+		//}
 	}
 
-	logger.Infof("arryaConcentration row to save = " + fmt.Sprintf("%v", len(arryaConcentration)))
-
-	errSave := s.repo.SaveConcentration(ctx, arryaConcentration)
-	if errSave != nil {
-		return Points{}, errSave
+	errAsync := errGrp.Wait()
+	if errAsync != nil {
+		fmt.Println(errAsync)
+		fmt.Println("Error with submitting the order, try again later...")
+		return Points{}, errAsync
 	}
 
 	return result, nil

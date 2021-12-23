@@ -20,6 +20,7 @@ CREATE TABLE users (
 
    height decimal not null,
    weight decimal not null*/
+  ,type_sports text[]
 );
 
 ALTER TABLE ONLY users

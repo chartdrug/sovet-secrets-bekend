@@ -2,9 +2,11 @@ package profile
 
 import (
 	"context"
+	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"strings"
 	"time"
 )
 
@@ -23,11 +25,12 @@ type Users struct {
 }
 
 type CreateUser struct {
-	Login    string    `json:"login"`
-	Pass     string    `json:"pass"`
-	Email    string    `json:"email"`
-	Sex      string    `json:"sex"`
-	Birthday time.Time `json:"birthday"`
+	Login      string    `json:"login"`
+	Pass       string    `json:"pass"`
+	Email      string    `json:"email"`
+	Sex        string    `json:"sex"`
+	Birthday   time.Time `json:"birthday"`
+	TypeSports []string  `json:"typesports"`
 }
 
 type service struct {
@@ -37,10 +40,10 @@ type service struct {
 
 func (m CreateUser) Validate() error {
 	return validation.ValidateStruct(&m,
-		validation.Field(&m.Login, validation.Required, validation.Length(5, 20)),
-		validation.Field(&m.Pass, validation.Required, validation.Length(5, 20)),
+		validation.Field(&m.Login, validation.Required, validation.Length(1, 30)),
+		validation.Field(&m.Pass, validation.Required, validation.Length(1, 30)),
 		//validation.Field(&m.Email, validation.Required, is.Email),
-		validation.Field(&m.Email, validation.Required, validation.Length(5, 40)),
+		validation.Field(&m.Email, validation.Required, validation.Length(1, 40)),
 		validation.Field(&m.Sex, validation.Required, validation.In("M", "F")),
 		validation.Field(&m.Birthday, validation.Required, validation.NotNil),
 	)
@@ -91,7 +94,7 @@ func (s service) Create(ctx context.Context, req CreateUser) (Users, error) {
 	}
 
 	id := entity.GenerateID()
-
+	fmt.Println(req.TypeSports)
 	err := s.repo.Create(ctx, entity.Users{
 		ID:             id,
 		Login:          req.Login,
@@ -100,6 +103,7 @@ func (s service) Create(ctx context.Context, req CreateUser) (Users, error) {
 		DateRegistered: time.Now(),
 		Sex:            req.Sex,
 		Birthday:       req.Birthday,
+		TypeSports:     "{" + strings.Join(req.TypeSports, ",") + "}",
 	})
 	if err != nil {
 		return Users{}, err

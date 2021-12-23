@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
@@ -106,6 +107,18 @@ func (r resource) create(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
+	var arr []string
+
+	json.Unmarshal([]byte(user.TypeSports), &arr)
+	fmt.Println(len(arr))
 
 	return c.WriteWithStatus(user, http.StatusCreated)
+	/*return c.WriteWithStatçus(entity.UsersRest{
+	ID:             user.ID,
+	Login:          user.Login,
+	Email:          user.Email,
+	DateRegistered: user.DateLastlogin,
+	Sex:            user.Sex,
+	Birthday:       user.Birthday,
+	TypeSports:		"{"+ strings.Join(req.TypeSports,",") + "}", http.StatusCreated)*/
 }

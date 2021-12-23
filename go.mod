@@ -8,8 +8,7 @@ require (
 	github.com/go-ozzo/ozzo-routing/v2 v2.3.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.1.0
 	github.com/google/uuid v1.1.1
-	github.com/ip2location/ip2location-go v8.3.0+incompatible
-	github.com/ip2location/ip2location-go/v9 v9.2.0 // indirect
+	github.com/ip2location/ip2location-go/v9 v9.2.0
 	github.com/lib/pq v1.2.0
 	github.com/qiangxue/go-env v1.0.0
 	github.com/stretchr/testify v1.4.0
@@ -17,5 +16,6 @@ require (
 	go.uber.org/multierr v1.4.0 // indirect
 	go.uber.org/zap v1.13.0
 	golang.org/x/lint v0.0.0-20200130185559-910be7a94367 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	gopkg.in/yaml.v2 v2.2.2
 )

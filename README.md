@@ -234,6 +234,7 @@ ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
 docker stop server 
 
 docker run -it --rm -d -p 8080:8080 --name server server
+docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
 
 cd /etc/nginx
 sudo systemctl reload nginx
@@ -244,6 +245,13 @@ tail -n 5 /var/log/app/server.log
 
 sudo cd /var/log/nginx
 
+docker images --all
+docker logs server
+
+docker rm server
+
+
+docker image rm 23766f726b07
 
 
 ```

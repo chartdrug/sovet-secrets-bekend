@@ -28,6 +28,7 @@ func NewRepository(db *dbcontext.DB, logger log.Logger) Repository {
 func (r repository) Get(ctx context.Context, id string) (entity.Users, error) {
 	var user entity.Users
 	err := r.db.With(ctx).Select().Model(id, &user)
+	//err := r.db.With(ctx).NewQuery("select id, login, passwd, email, date_registered, date_lastlogin, sex, birthday, array_to_json(type_sports) as type_sports from users where id = {:id}").Bind(dbx.Params{"id": id}).All(&user)
 	return user, err
 }
 
