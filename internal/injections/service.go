@@ -591,57 +591,6 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 		//цик расчёта
 	}
 
-	//dtStart := injection.Injection.Dt
-	if 1 != 1 {
-		for i := 0; i < 3; i++ {
-
-			point := entity.Point{}
-
-			point.Dt = 1625079780000 //+ (i * 10000000)
-
-			//point.Dt = int(dtStart + (i * 10000))
-			//var plussI int = i * 10
-			//point.Dt = int(dtStart.Add(time.Minute * plussI).Unix())
-
-			//next_time:= cur_time.Add(time.Hour * 2 + time.Minute * 1+ time.Second * 21)
-			//fmt.Printf("current time is :%s\n", cur_time )
-			//fmt.Printf("calculated time is :%s", next_time)
-
-			point.PointValues = append(point.PointValues, entity.PointValue{})
-
-			point.PointValues[0].Drug = "SUMM"
-			point.PointValues[0].C = 0
-			point.PointValues[0].CC = 0
-			point.PointValues[0].CCT = 0
-			point.PointValues[0].CT = 0
-
-			for _, item := range injection.Injection_Dose {
-
-				if item.Drug != "" {
-					//logger.Infof("injection.Injection_Dose " + item.ID)
-				}
-
-				pValue := entity.PointValue{}
-
-				pValue.Drug = item.Drug
-				pValue.C = 0.0028981088472945313
-				pValue.CC = 0.0028981088472945313
-				pValue.CCT = 0.0009991573645662046
-				pValue.CT = 0.0028981088472945313
-
-				point.PointValues[0].C += pValue.C
-				point.PointValues[0].CC += pValue.CC
-				point.PointValues[0].CCT += pValue.CCT
-				point.PointValues[0].CT += pValue.CT
-
-				point.PointValues = append(point.PointValues, pValue)
-			}
-
-			result.Points = append(result.Points, point)
-
-		}
-	}
-
 	//чистим данные по прошлым расчётам
 	errDelete := s.repo.DeleteConcentration(ctx, owner, id)
 	if errDelete != nil {
@@ -653,12 +602,12 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 
 	var arryaConcentration []entity.Concentration
 	for _, Drug := range result.Drugs {
-		logger.Infof("save injection Drugs = " + Drug)
+		logger.Infof("save injection Drugs = " + Drug + ", result.Points=" + fmt.Sprintf(":%v", len(result.Points)))
 		var count = 15
 		arryaConcentration = []entity.Concentration{}
 
 		for _, itemPoint := range result.Points {
-
+			//fmt.Println(itemPoint.Dt)
 			for _, itemPoints := range itemPoint.PointValues {
 
 				if itemPoints.Drug == Drug {
