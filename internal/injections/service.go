@@ -233,7 +233,11 @@ func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fD
 		}
 	*/
 	//sort.Sort(result.Points)
-
+	//подпорка для фронта чтобы не падал когда в отчёте пусто
+	if len(result.Drugs) == 0 {
+		result.Drugs = []string{}
+		result.Points = []entity.Point{}
+	}
 	return result, nil
 }
 
