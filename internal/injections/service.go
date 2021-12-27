@@ -9,8 +9,7 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"math"
 	"sort"
-	//"sync"
-	"golang.org/x/sync/errgroup"
+
 	"time"
 )
 
@@ -646,11 +645,12 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 	}
 	//сохроняем в БД
 
-	errGrp, _ := errgroup.WithContext(context.Background())
+	//errGrp, _ := errgroup.WithContext(context.Background())
 
 	var arryaConcentration []entity.Concentration
 	for _, Drug := range result.Drugs {
 		logger.Infof("save injection Drugs = " + Drug)
+		var count = 15
 		arryaConcentration = []entity.Concentration{}
 
 		for _, itemPoint := range result.Points {
@@ -658,36 +658,40 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 			for _, itemPoints := range itemPoint.PointValues {
 
 				if itemPoints.Drug == Drug {
-					arryaConcentration = append(arryaConcentration, entity.Concentration{
-						Owner:        owner,
-						Id_injection: id,
-						Drug:         itemPoints.Drug,
-						Dt:           itemPoint.Dt,
-						C:            itemPoints.C,
-						CC:           itemPoints.CC,
-						CCT:          itemPoints.CCT,
-						CT:           itemPoints.CT,
-					})
+					//каждый 15й элемент
+					if count%15 == 0 {
+						arryaConcentration = append(arryaConcentration, entity.Concentration{
+							Owner:        owner,
+							Id_injection: id,
+							Drug:         itemPoints.Drug,
+							Dt:           itemPoint.Dt,
+							C:            itemPoints.C,
+							CC:           itemPoints.CC,
+							CCT:          itemPoints.CCT,
+							CT:           itemPoints.CT,
+						})
+					}
+					count++
 				}
 
 			}
 		}
 		logger.Infof("arryaConcentration row to save = " + fmt.Sprintf("%v", len(arryaConcentration)))
 
-		errGrp.Go(func() error { return s.repo.SaveConcentration(ctx, arryaConcentration) })
+		//errGrp.Go(func() error { return s.repo.SaveConcentration(ctx, arryaConcentration) })
 
-		//errSave := s.repo.SaveConcentration(ctx, arryaConcentration)
-		//if errSave != nil {
-		//	return Points{}, errSave
-		//}
+		errSave := s.repo.SaveConcentration(ctx, arryaConcentration)
+		if errSave != nil {
+			return Points{}, errSave
+		}
 	}
-
-	errAsync := errGrp.Wait()
-	if errAsync != nil {
-		fmt.Println(errAsync)
-		fmt.Println("Error with submitting the order, try again later...")
-		return Points{}, errAsync
-	}
+	/*
+		errAsync := errGrp.Wait()
+		if errAsync != nil {
+			fmt.Println(errAsync)
+			fmt.Println("Error with submitting the order, try again later...")
+			return Points{}, errAsync
+		}*/
 
 	return result, nil
 }
@@ -762,6 +766,11 @@ func (s service) Delete(ctx context.Context, id string, owner string) (Injection
 		if err = s.repo.DeleteDose(ctx, item.ID); err != nil {
 			return InjectionModel{}, err
 		}
+	}
+	//удаляем прошлые расчёты
+	errDelete := s.repo.DeleteConcentration(ctx, owner, id)
+	if errDelete != nil {
+		return InjectionModel{}, err
 	}
 
 	return injection, nil

@@ -84,8 +84,8 @@ func (s service) authenticate(ctx context.Context, username, password string, ip
 		return User{user}, nil
 	}
 
-	logger.Infof("authentication failed username=" + username)
-	return User{}, err
+	logger.Error("authentication failed username=" + username + ",err=" + err.Error())
+	return User{}, errors.Forbidden("The login or password you entered is incorrect. Please try again.")
 }
 
 // generateJWT generates a JWT that encodes an identity.

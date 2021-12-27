@@ -102,13 +102,14 @@ func (r repository) SaveConcentration(ctx context.Context, concentration []entit
 	vals := []interface{}{}
 	count := 0
 	//сохраняем каждую 15ю минуту
-	//fmt.Println(concentration[0].Drug)
-	for i := 1; i < len(concentration); i = i + 15 {
+	fmt.Println(concentration[0].Drug)
+	for i := 1; i < len(concentration); i++ {
 		count++
 		vals = append(vals, concentration[i].Owner, concentration[i].Id_injection, concentration[i].Drug,
 			concentration[i].Dt, concentration[i].C, concentration[i].CC, concentration[i].CCT, concentration[i].CT)
 
 	}
+	fmt.Println(count)
 	sqlStr := `INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s`
 	sqlStr = ReplaceSQL(sqlStr, "(?, ?, ?, ?, ?, ?, ?, ?)", count)
 	/*
