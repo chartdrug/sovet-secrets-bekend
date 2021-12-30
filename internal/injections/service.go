@@ -144,26 +144,29 @@ func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fD
 	var point entity.Point
 
 	for i := 0; i < len(Concentration); i++ {
+		//for i := 0; i < 10; i++ {
 		fmt.Println("start")
 		fmt.Println(i)
 
 		if preDt != Concentration[i].Dt {
-			fmt.Println("preDt != Concentration[i].Dt ")
+			//fmt.Println("preDt != Concentration[i].Dt ")
 			//новая дата или первый раз
 
 			if preDt != 0 {
 				//если не первый раз сюда попали - последний блок всегда теряем ;)
-				fmt.Println("append(result.Points, point)")
+				//fmt.Println("append(result.Points, point)")
 				if len(point.PointValues) != len(result.Drugs)+1 {
-					fmt.Println("len(point.PointValues) != len(result.Drugs)")
-					var existsDrug = false
+					//fmt.Println("len(point.PointValues) != len(result.Drugs)")
+
 					for _, Drug := range result.Drugs {
+						var existsDrug = false
 						for _, pV := range point.PointValues {
 							if pV.Drug == Drug {
 								existsDrug = true
 							}
 						}
 						if !existsDrug {
+							//fmt.Println(Drug)
 							pValue := entity.PointValue{}
 
 							pValue.Drug = Drug
