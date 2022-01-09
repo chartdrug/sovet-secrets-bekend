@@ -238,6 +238,7 @@ docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
 
 cd /etc/nginx
 sudo systemctl reload nginx
+sudo systemctl status nginx
 
 docker exec -it server bash
 
@@ -252,6 +253,11 @@ docker rm server
 
 
 docker image rm 23766f726b07
+
+//docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data -v "/absolute/path/to/directory-with-init-scripts":/docker-entrypoint-initdb.d postgres:13.3
+docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data postgres:13.3
+//docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "$(pwd)":/var/lib/postgresql/data -v "$(pwd)/../2. Init Database":/docker-entrypoint-initdb.d postgres:13.3
+
 
 
 ```

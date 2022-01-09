@@ -90,6 +90,7 @@ fmt: ## run "go fmt" on all Go packages
 .PHONY: migrate
 migrate: ## run all new database migrations
 	@echo "Running all new database migrations..."
+	@echo "$(MIGRATE)"
 	@$(MIGRATE) up
 
 .PHONY: migrate-down

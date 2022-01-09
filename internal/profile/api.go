@@ -6,8 +6,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"net/http"
+	"net/mail"
 	"strings"
 )
 
@@ -16,6 +18,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	res := resource{service, logger}
 
 	r.Post("/api/createprofile", res.create)
+	r.Post("/api/restorepassword", res.restorepassword)
 
 	r.Use(authHandler)
 
@@ -121,4 +124,28 @@ func (r resource) create(c *routing.Context) error {
 	Sex:            user.Sex,
 	Birthday:       user.Birthday,
 	TypeSports:		"{"+ strings.Join(req.TypeSports,",") + "}", http.StatusCreated)*/
+}
+
+func (r resource) restorepassword(c *routing.Context) error {
+	var input CreateUser
+	if err := c.Read(&input); err != nil {
+		r.logger.With(c.Request.Context()).Info(err)
+		return errors.BadRequest("")
+	}
+
+	fmt.Println(input.Email)
+
+	user, err := r.service.GetByEmail(c.Request.Context(), input.Email)
+
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	fmt.Println(user.Email)
+	fmt.Println(user.Passwd)
+
+	utils.SendMail("gmail-smtp-in.l.google.com:25", (&mail.Address{"info@chartdrug.com", "info@chartdrug.com"}).String(),
+		"Restore password", "message body", []string{(&mail.Address{"", "k.dereshev@ya.ru"}).String()})
+
+	return c.WriteWithStatus("", http.StatusBadGateway)
 }
