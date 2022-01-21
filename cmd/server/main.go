@@ -18,6 +18,7 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/internal/healthcheck"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/injections"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/profile"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/spr"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/accesslog"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/dbcontext"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
@@ -123,10 +124,10 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.
 		authHandler, logger,
 	)
 
-	//	spr.RegisterHandlers(rg.Group(""),
-	//		spr.NewService(spr.NewRepository(db, logger), logger),
-	//		authHandler, logger,
-	//	)
+	spr.RegisterHandlers(rg.Group(""),
+		spr.NewService(spr.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
 
 	return router
 }

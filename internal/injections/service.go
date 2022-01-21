@@ -145,8 +145,8 @@ func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fD
 
 	for i := 0; i < len(Concentration); i++ {
 		//for i := 0; i < 10; i++ {
-		fmt.Println("start")
-		fmt.Println(i)
+		//fmt.Println("start")
+		//fmt.Println(i)
 
 		if preDt != Concentration[i].Dt {
 			//fmt.Println("preDt != Concentration[i].Dt ")
@@ -188,7 +188,7 @@ func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fD
 			//fmt.Println(len(point.PointValues))
 		}
 		//fmt.Println(len(point.PointValues))
-		fmt.Println("pValue := entity.PointValue{}")
+		//fmt.Println("pValue := entity.PointValue{}")
 
 		pValue := entity.PointValue{}
 
@@ -595,59 +595,55 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 	}
 
 	//чистим данные по прошлым расчётам
-	errDelete := s.repo.DeleteConcentration(ctx, owner, id)
-	if errDelete != nil {
-		return Points{}, errDelete
-	}
-	//сохроняем в БД
+	//errDelete := s.repo.DeleteConcentration(ctx, owner, id)
+	//if errDelete != nil {
+	//	return Points{}, errDelete
+	//}
+	//сохроняем в БД если ранее не делали
+	fmt.Println(injection.Injection.ID)
+	fmt.Println(injection.Injection.Calc)
+	if !injection.Injection.Calc {
+		injection.Injection.Calc = true
+		fmt.Println(1111111)
+		errUpdateInjection := s.repo.UpdateInjection(ctx, injection.Injection)
+		if errUpdateInjection != nil {
+			return Points{}, errUpdateInjection
+		}
+		//errGrp, _ := errgroup.WithContext(context.Background())
 
-	//errGrp, _ := errgroup.WithContext(context.Background())
+		var arryaConcentration []entity.Concentration
+		for _, Drug := range result.Drugs {
+			logger.Infof("save injection Drugs = " + Drug + ", result.Points=" + fmt.Sprintf(":%v", len(result.Points)))
+			var count = 15
+			arryaConcentration = []entity.Concentration{}
 
-	var arryaConcentration []entity.Concentration
-	for _, Drug := range result.Drugs {
-		logger.Infof("save injection Drugs = " + Drug + ", result.Points=" + fmt.Sprintf(":%v", len(result.Points)))
-		var count = 15
-		arryaConcentration = []entity.Concentration{}
+			for _, itemPoint := range result.Points {
+				//fmt.Println(itemPoint.Dt)
+				for _, itemPoints := range itemPoint.PointValues {
 
-		for _, itemPoint := range result.Points {
-			//fmt.Println(itemPoint.Dt)
-			for _, itemPoints := range itemPoint.PointValues {
-
-				if itemPoints.Drug == Drug {
-					//каждый 15й элемент
-					if count%15 == 0 {
-						arryaConcentration = append(arryaConcentration, entity.Concentration{
-							Owner:        owner,
-							Id_injection: id,
-							Drug:         itemPoints.Drug,
-							Dt:           itemPoint.Dt,
-							C:            itemPoints.C,
-							CC:           itemPoints.CC,
-							CCT:          itemPoints.CCT,
-							CT:           itemPoints.CT,
-						})
+					if itemPoints.Drug == Drug {
+						//каждый 15й элемент
+						if count%15 == 0 {
+							arryaConcentration = append(arryaConcentration, entity.Concentration{
+								Owner:        owner,
+								Id_injection: id,
+								Drug:         itemPoints.Drug,
+								Dt:           itemPoint.Dt,
+								C:            itemPoints.C,
+								CC:           itemPoints.CC,
+								CCT:          itemPoints.CCT,
+								CT:           itemPoints.CT,
+							})
+						}
+						count++
 					}
-					count++
+
 				}
-
 			}
-		}
-		logger.Infof("arryaConcentration row to save = " + fmt.Sprintf("%v", len(arryaConcentration)))
-
-		//errGrp.Go(func() error { return s.repo.SaveConcentration(ctx, arryaConcentration) })
-
-		errSave := s.repo.SaveConcentration(ctx, arryaConcentration)
-		if errSave != nil {
-			return Points{}, errSave
+			logger.Infof("arryaConcentration lengt = " + fmt.Sprintf("%v", len(arryaConcentration)))
+			s.repo.SaveConcentration2(ctx, arryaConcentration)
 		}
 	}
-	/*
-		errAsync := errGrp.Wait()
-		if errAsync != nil {
-			fmt.Println(errAsync)
-			fmt.Println("Error with submitting the order, try again later...")
-			return Points{}, errAsync
-		}*/
 
 	return result, nil
 }

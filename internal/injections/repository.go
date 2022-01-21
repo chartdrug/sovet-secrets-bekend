@@ -23,11 +23,13 @@ type Repository interface {
 	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
 	DeleteDose(ctx context.Context, idDose string) error
 	SaveConcentration(ctx context.Context, concentration []entity.Concentration) error
+	SaveConcentration2(ctx context.Context, concentration []entity.Concentration)
 	DeleteConcentration(ctx context.Context, owner string, id string) error
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 	GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 	GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
+	UpdateInjection(ctx context.Context, injection entity.Injection) error
 }
 
 type repository struct {
@@ -128,6 +130,29 @@ func (r repository) SaveConcentration(ctx context.Context, concentration []entit
 	return nil
 }
 
+func (r repository) SaveConcentration2(ctx context.Context, concentration []entity.Concentration) {
+	logger := r.logger.With(ctx)
+	for j := 0; j < len(concentration); j = j + 5000 {
+		vals := []interface{}{}
+		count := 0
+		for i := j; i < len(concentration) && i < (j+5000); i++ {
+			count++
+			vals = append(vals, concentration[i].Owner, concentration[i].Id_injection, concentration[i].Drug,
+				concentration[i].Dt, concentration[i].C, concentration[i].CC, concentration[i].CCT, concentration[i].CT)
+
+		}
+		sqlStr := `INSERT INTO concentration (owner, id_injection, drug, dt, c, cc, cct, ct) VALUES %s`
+		sqlStr = ReplaceSQL(sqlStr, "(?, ?, ?, ?, ?, ?, ?, ?)", count)
+		stmt, _ := r.db2.Prepare(sqlStr)
+		_, err := stmt.Exec(vals...)
+
+		if err != nil {
+			logger.Error("SaveConcentration2 error to save = " + err.Error())
+		}
+
+	}
+}
+
 func (r repository) GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error) {
 	var concentrationDrugs []entity.Concentration
 	//err := r.db.With(ctx).Select("drug").Where(dbx.HashExp{"owner": owner}).Distinct(true).All(&concentrationDrugs)
@@ -165,4 +190,10 @@ func ReplaceSQL(stmt, pattern string, len int) string {
 		stmt = strings.Replace(stmt, "?", param, 1)
 	}
 	return strings.TrimSuffix(stmt, ",")
+}
+
+func (r repository) UpdateInjection(ctx context.Context, injection entity.Injection) error {
+	fmt.Println(injection.Calc)
+	_, err := r.db.With(ctx).Update("injection", dbx.Params{"calc": injection.Calc}, dbx.NewExp("id={:id}", dbx.Params{"id": injection.ID})).Execute()
+	return err
 }

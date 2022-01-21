@@ -225,3 +225,5 @@ create table history_login(
      City TEXT
 );
 CREATE INDEX idx_history_login_user ON history_login(id_user);
+
+alter table injection ADD COLUMN calc boolean default false;

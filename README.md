@@ -232,9 +232,10 @@ docker save server:latest | bzip2 | ssh -i sovet-ZEFNmBra.pem centos@213.219.213
 ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
 
 docker stop server 
+docker rm server
 
 docker run -it --rm -d -p 8080:8080 --name server server
-docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
+docker stop server && docker rm server && docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
 
 cd /etc/nginx
 sudo systemctl reload nginx
@@ -249,15 +250,15 @@ sudo cd /var/log/nginx
 docker images --all
 docker logs server
 
-docker rm server
 
-
-docker image rm 23766f726b07
 
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data -v "/absolute/path/to/directory-with-init-scripts":/docker-entrypoint-initdb.d postgres:13.3
-docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data postgres:13.3
+docker run --name habr-pg-13.3 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data postgres:13.3
+docker run -it -d --restart unless-stopped -p 5432:5432 --name habr-pg-13.3 postgres:13.3
+
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "$(pwd)":/var/lib/postgresql/data -v "$(pwd)/../2. Init Database":/docker-entrypoint-initdb.d postgres:13.3
 
+docker run --restart always --name mail -p 587:587 -e RELAY_HOST=smtp.chartdrug.com -e RELAY_PORT=587 -e RELAY_USERNAME=info@chartdrug.com -e RELAY_PASSWORD=secretpassword -d bytemark/smtp
 
 
 ```

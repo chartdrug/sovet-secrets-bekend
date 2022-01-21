@@ -96,7 +96,7 @@ func SendMail(addr, from, subject, body string, to []string) error {
 		"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
 		"Content-Transfer-Encoding: base64\r\n" +
 		"\r\n" + base64.StdEncoding.EncodeToString([]byte(body))
-
+	fmt.Println(msg)
 	_, err = w.Write([]byte(msg))
 	if err != nil {
 		fmt.Print(err)

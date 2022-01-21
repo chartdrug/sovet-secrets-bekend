@@ -30,7 +30,7 @@ type CreateUser struct {
 	Email      string    `json:"email"`
 	Sex        string    `json:"sex"`
 	Birthday   time.Time `json:"birthday"`
-	TypeSports []string  `json:"typesports"`
+	TypeSports []int     `json:"typesports"`
 }
 
 type service struct {
@@ -103,7 +103,8 @@ func (s service) Create(ctx context.Context, req CreateUser) (Users, error) {
 		DateRegistered: time.Now(),
 		Sex:            req.Sex,
 		Birthday:       req.Birthday,
-		TypeSports:     "{" + strings.Join(req.TypeSports, ",") + "}",
+		//TypeSports:     "{" + strings.Join(req.TypeSports, ",") + "}",
+		TypeSports: "{" + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(req.TypeSports)), ","), "[]") + "}",
 	})
 	if err != nil {
 		return Users{}, err

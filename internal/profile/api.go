@@ -23,6 +23,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	r.Use(authHandler)
 
 	// the following endpoints require a valid JWT
+	r.Post("/api/updateprofile", res.create)
 	r.Get("/api/profile", res.get)
 	r.Get("/api/historylogin", res.getHistoryLogin)
 
@@ -87,11 +88,12 @@ func GetValue(service Service, logger log.Logger, c *routing.Context) string {
 
 func (r resource) create(c *routing.Context) error {
 	var input CreateUser
+	fmt.Println("111")
 	if err := c.Read(&input); err != nil {
 		r.logger.With(c.Request.Context()).Info(err)
 		return errors.BadRequest("")
 	}
-
+	fmt.Println(22222)
 	user1, err1 := r.service.GetByLogin(c.Request.Context(), input.Login)
 
 	if err1 == nil && user1.Login == input.Login {
@@ -99,8 +101,8 @@ func (r resource) create(c *routing.Context) error {
 	}
 
 	user1, err1 = r.service.GetByEmail(c.Request.Context(), input.Email)
-	//fmt.Println(input.Email)
-	//fmt.Println(user1.Email)
+	fmt.Println(input.Email)
+	fmt.Println(user1.Email)
 
 	if err1 == nil && user1.Email == input.Email {
 		return errors.BadRequest("Email exists")
@@ -138,13 +140,14 @@ func (r resource) restorepassword(c *routing.Context) error {
 	user, err := r.service.GetByEmail(c.Request.Context(), input.Email)
 
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		r.logger.Error("restorepassword error:" + err.Error())
+		return c.WriteWithStatus("", http.StatusAccepted)
 	}
 
 	fmt.Println(user.Email)
 	fmt.Println(user.Passwd)
 
-	utils.SendMail("gmail-smtp-in.l.google.com:25", (&mail.Address{"info@chartdrug.com", "info@chartdrug.com"}).String(),
+	utils.SendMail("smtp.chartdrug.com:587", (&mail.Address{"info@chartdrug.com", "info@chartdrug.com"}).String(),
 		"Restore password", "message body", []string{(&mail.Address{"", "k.dereshev@ya.ru"}).String()})
 
 	return c.WriteWithStatus("", http.StatusBadGateway)

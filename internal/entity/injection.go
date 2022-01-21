@@ -22,6 +22,7 @@ type Injection struct {
 	TotalV   float64 `json:"-" db:"-"`
 	SkinSumm float64 `json:"-" db:"-"`
 	Skin     float64 `json:"-" db:"-"`
+	Calc     bool    `json:"-"`
 }
 
 type Concentration struct {
