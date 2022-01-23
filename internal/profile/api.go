@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"net/http"
 	"net/mail"
+	"strconv"
 	"strings"
 )
 
@@ -46,11 +48,35 @@ func (r resource) get(c *routing.Context) error {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		profile, err := r.service.Get(c.Request.Context(), claims["id"].(string))
+		//fmt.Println(profile.TypeSports)
 		if err != nil {
 			return err
 		}
 
-		return c.Write(profile)
+		//подпорка масива из Бд на С
+		strs := strings.Split(strings.ReplaceAll(strings.ReplaceAll(profile.TypeSports, "{", ""), "}", ""), ",")
+
+		ary := make([]int, len(strs))
+		for i := range ary {
+			ary[i], _ = strconv.Atoi(strs[i])
+		}
+
+		if profile.TypeSports == "{}" {
+			ary = []int{}
+		}
+
+		profileRest := entity.UsersRest{ID: profile.ID,
+			Login:          profile.Login,
+			Email:          profile.Email,
+			DateRegistered: profile.DateRegistered,
+			DateLastlogin:  profile.DateLastlogin,
+			Sex:            profile.Sex,
+			Birthday:       profile.Birthday,
+			TypeSports:     ary,
+		}
+
+		//TypeSports     []string  `json:"typesports"`
+		return c.Write(profileRest)
 	} else {
 		return err
 	}
@@ -88,12 +114,12 @@ func GetValue(service Service, logger log.Logger, c *routing.Context) string {
 
 func (r resource) create(c *routing.Context) error {
 	var input CreateUser
-	fmt.Println("111")
+	//fmt.Println("111")
 	if err := c.Read(&input); err != nil {
 		r.logger.With(c.Request.Context()).Info(err)
 		return errors.BadRequest("")
 	}
-	fmt.Println(22222)
+	//fmt.Println(22222)
 	user1, err1 := r.service.GetByLogin(c.Request.Context(), input.Login)
 
 	if err1 == nil && user1.Login == input.Login {
@@ -101,8 +127,8 @@ func (r resource) create(c *routing.Context) error {
 	}
 
 	user1, err1 = r.service.GetByEmail(c.Request.Context(), input.Email)
-	fmt.Println(input.Email)
-	fmt.Println(user1.Email)
+	//fmt.Println(input.Email)
+	//fmt.Println(user1.Email)
 
 	if err1 == nil && user1.Email == input.Email {
 		return errors.BadRequest("Email exists")

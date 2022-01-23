@@ -12,7 +12,7 @@ type UsersRest struct {
 	DateLastlogin  time.Time `json:"date_lastlogin"`
 	Sex            string    `json:"sex"`
 	Birthday       time.Time `json:"birthday"`
-	TypeSports     []string  `json:"typesports"`
+	TypeSports     []int     `json:"typesports"`
 }
 
 type Users struct {
