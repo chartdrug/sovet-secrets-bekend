@@ -25,7 +25,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	r.Use(authHandler)
 
 	// the following endpoints require a valid JWT
-	r.Post("/api/updateprofile", res.create)
+	r.Post("/api/updateprofile", res.update)
 	r.Get("/api/profile", res.get)
 	r.Get("/api/historylogin", res.getHistoryLogin)
 
@@ -152,6 +152,71 @@ func (r resource) create(c *routing.Context) error {
 	Sex:            user.Sex,
 	Birthday:       user.Birthday,
 	TypeSports:		"{"+ strings.Join(req.TypeSports,",") + "}", http.StatusCreated)*/
+}
+
+func (r resource) update(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		//profile, err := r.service.Get(c.Request.Context(), claims["id"].(string))
+		var input CreateUser
+		if err := c.Read(&input); err != nil {
+			r.logger.With(c.Request.Context()).Info(err)
+			return errors.BadRequest("")
+		}
+
+		user1, err1 := r.service.GetByLogin(c.Request.Context(), input.Login)
+
+		//  смена логина и проверка что он не занят
+		if err1 == nil && user1.Login == input.Login && user1.ID != claims["id"].(string) {
+			return errors.BadRequest("login exists")
+		}
+
+		user1, err1 = r.service.GetByEmail(c.Request.Context(), input.Email)
+
+		// смена емейл и проверка что он не занят
+		if err1 == nil && user1.Email == input.Email && user1.ID != claims["id"].(string) {
+			return errors.BadRequest("Email exists")
+		}
+
+		//user :=entity.Users{}
+		user, err := r.service.Update(c.Request.Context(), claims["id"].(string), input)
+		if err != nil {
+			return err
+		}
+
+		//подпорка масива из Бд на С
+		strs := strings.Split(strings.ReplaceAll(strings.ReplaceAll(user.TypeSports, "{", ""), "}", ""), ",")
+
+		ary := make([]int, len(strs))
+		for i := range ary {
+			ary[i], _ = strconv.Atoi(strs[i])
+		}
+
+		if user.TypeSports == "{}" {
+			ary = []int{}
+		}
+
+		profileRest := entity.UsersRest{ID: user.ID,
+			Login:          user.Login,
+			Email:          user.Email,
+			DateRegistered: user.DateRegistered,
+			DateLastlogin:  user.DateLastlogin,
+			Sex:            user.Sex,
+			Birthday:       user.Birthday,
+			TypeSports:     ary,
+		}
+
+		return c.WriteWithStatus(profileRest, http.StatusAccepted)
+	} else {
+		return err
+	}
 }
 
 func (r resource) restorepassword(c *routing.Context) error {

@@ -14,6 +14,7 @@ type Repository interface {
 	GetByLogin(ctx context.Context, login string) (entity.Users, error)
 	GetByEmail(ctx context.Context, email string) (entity.Users, error)
 	Create(ctx context.Context, album entity.Users) error
+	Update(ctx context.Context, album entity.Users) error
 }
 
 type repository struct {
@@ -46,6 +47,10 @@ func (r repository) GetHistoryLogin(ctx context.Context, id string) ([]entity.Hi
 
 func (r repository) Create(ctx context.Context, antro entity.Users) error {
 	return r.db.With(ctx).Model(&antro).Insert()
+}
+func (r repository) Update(ctx context.Context, user entity.Users) error {
+	_, err := r.db.With(ctx).Update("users", dbx.Params{"login": user.Login, "email": user.Email, "sex": user.Sex, "birthday": user.Birthday, "type_sports": user.TypeSports}, dbx.HashExp{"id": user.ID}).Execute()
+	return err
 }
 
 func (r repository) GetByLogin(ctx context.Context, login string) (entity.Users, error) {

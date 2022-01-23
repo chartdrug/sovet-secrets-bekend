@@ -14,7 +14,8 @@ import (
 type Service interface {
 	Get(ctx context.Context, id string) (Users, error)
 	GetHistoryLogin(ctx context.Context, id string) ([]entity.HistoryLogin, error)
-	Create(ctx context.Context, input CreateUser) (Users, error)
+	Create(ctx context.Context, req CreateUser) (Users, error)
+	Update(ctx context.Context, id string, req CreateUser) (Users, error)
 	GetByLogin(ctx context.Context, login string) (Users, error)
 	GetByEmail(ctx context.Context, email string) (Users, error)
 }
@@ -46,6 +47,19 @@ func (m CreateUser) Validate() error {
 		validation.Field(&m.Email, validation.Required, validation.Length(1, 40)),
 		validation.Field(&m.Sex, validation.Required, validation.In("M", "F")),
 		validation.Field(&m.Birthday, validation.Required, validation.NotNil),
+		validation.Field(&m.TypeSports, validation.Required, validation.NotNil),
+	)
+}
+
+func (m CreateUser) ValidateUpdate() error {
+	return validation.ValidateStruct(&m,
+		validation.Field(&m.Login, validation.Required, validation.Length(1, 30)),
+		//validation.Field(&m.Pass, validation.Required, validation.Length(1, 30)),
+		//validation.Field(&m.Email, validation.Required, is.Email),
+		validation.Field(&m.Email, validation.Required, validation.Length(1, 40)),
+		validation.Field(&m.Sex, validation.Required, validation.In("M", "F")),
+		validation.Field(&m.Birthday, validation.Required, validation.NotNil),
+		validation.Field(&m.TypeSports, validation.Required, validation.NotNil),
 	)
 }
 
@@ -89,7 +103,7 @@ func (s service) GetByEmail(ctx context.Context, email string) (Users, error) {
 
 func (s service) Create(ctx context.Context, req CreateUser) (Users, error) {
 
-	if err := req.Validate(); err != nil {
+	if err := req.ValidateUpdate(); err != nil {
 		return Users{}, err
 	}
 
@@ -104,6 +118,29 @@ func (s service) Create(ctx context.Context, req CreateUser) (Users, error) {
 		Sex:            req.Sex,
 		Birthday:       req.Birthday,
 		//TypeSports:     "{" + strings.Join(req.TypeSports, ",") + "}",
+		TypeSports: "{" + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(req.TypeSports)), ","), "[]") + "}",
+	})
+	if err != nil {
+		return Users{}, err
+	}
+	return s.Get(ctx, id)
+}
+
+func (s service) Update(ctx context.Context, id string, req CreateUser) (Users, error) {
+
+	if err := req.ValidateUpdate(); err != nil {
+		return Users{}, err
+	}
+
+	fmt.Println(req.TypeSports)
+	err := s.repo.Update(ctx, entity.Users{
+		ID:    id,
+		Login: req.Login,
+		//Passwd:         req.Pass,
+		Email: req.Email,
+		//DateRegistered: time.Now(),
+		Sex:        req.Sex,
+		Birthday:   req.Birthday,
 		TypeSports: "{" + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(req.TypeSports)), ","), "[]") + "}",
 	})
 	if err != nil {
