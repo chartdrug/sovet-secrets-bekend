@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	gomail "gopkg.in/mail.v2"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -108,4 +110,35 @@ func SendMail(addr, from, subject, body string, to []string) error {
 		return err
 	}
 	return c.Quit()
+}
+
+func SendMailGmail(to string, subject string, body string) error {
+	m := gomail.NewMessage()
+
+	// Set E-Mail sender
+	m.SetHeader("From", "chartdrug@gmail.com")
+
+	// Set E-Mail receivers
+	m.SetHeader("To", to)
+
+	// Set E-Mail subject
+	m.SetHeader("Subject", subject)
+
+	// Set E-Mail body. You can set plain text or html with text/html
+	m.SetBody("text/plain", body)
+
+	// Settings for SMTP server
+	d := gomail.NewDialer("smtp.gmail.com", 587, "chartdrug@gmail.com", "ynoltzxpnezlyrto")
+
+	// This is only needed when SSL/TLS certificate is not valid on server.
+	// In production this should be set to false.
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// Now send E-Mail
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Println(err)
+		panic(err)
+		return err
+	}
+	return nil
 }

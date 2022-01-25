@@ -1,15 +1,14 @@
 package profile
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
-	gomail "gopkg.in/mail.v2"
 	"net/http"
 	"strconv"
 	"strings"
@@ -235,38 +234,17 @@ func (r resource) restorepassword(c *routing.Context) error {
 		return c.WriteWithStatus("", http.StatusAccepted)
 	}
 
-	fmt.Println(user.Email)
-	fmt.Println(user.Passwd)
+	//fmt.Println(user.Email)
+	//fmt.Println(user.Passwd)
 	/*
 		utils.SendMail("smtp.gmail.com:587", (&mail.Address{"chartdrug@gmail.com", "chartdrug@gmail.com"}).String(),
 			"Restore password", "message body", []string{(&mail.Address{"", "k.dereshev@ya.ru"}).String()})*/
 
-	m := gomail.NewMessage()
+	err = utils.SendMailGmail(user.Email, "ChartDrug restore password", "password "+user.Passwd+"for login "+user.Login)
 
-	// Set E-Mail sender
-	m.SetHeader("From", "chartdrug@gmail.com")
-
-	// Set E-Mail receivers
-	m.SetHeader("To", "k.dereshev@ya.ru")
-
-	// Set E-Mail subject
-	m.SetHeader("Subject", "Gomail test subject")
-
-	// Set E-Mail body. You can set plain text or html with text/html
-	m.SetBody("text/plain", "This is Gomail test body")
-
-	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.gmail.com", 587, "chartdrug@gmail.com", "xpv2bhzd")
-
-	// This is only needed when SSL/TLS certificate is not valid on server.
-	// In production this should be set to false.
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-	// Now send E-Mail
-	if err := d.DialAndSend(m); err != nil {
-		fmt.Println(err)
-		panic(err)
+	if err != nil {
+		return c.WriteWithStatus(err.Error(), http.StatusInternalServerError)
 	}
 
-	return c.WriteWithStatus("", http.StatusBadGateway)
+	return c.WriteWithStatus("", http.StatusAccepted)
 }
