@@ -161,6 +161,15 @@ func (r resource) create(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		//fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		//fmt.Println(input.Injection.ID)
+		if len(input.Injection.ID) > 1 {
+			fmt.Println("service.Delete")
+			_, errDell := r.service.Delete(c.Request.Context(), input.Injection.ID, claims["id"].(string))
+			if err != nil {
+				return errDell
+			}
+		}
 
 		injection, err := r.service.Create(c.Request.Context(), input, claims["id"].(string))
 		if err != nil {
