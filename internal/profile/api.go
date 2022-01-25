@@ -142,6 +142,11 @@ func (r resource) create(c *routing.Context) error {
 	json.Unmarshal([]byte(user.TypeSports), &arr)
 	fmt.Println(len(arr))
 
+	err = utils.SendMailGmail(user.Email, "ChartDrug create profile", "login "+user.Login+" Password "+user.Passwd)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	return c.WriteWithStatus(user, http.StatusCreated)
 	/*return c.WriteWithStatçus(entity.UsersRest{
 	ID:             user.ID,
