@@ -767,6 +767,11 @@ func (s service) DeleteDose(ctx context.Context, id string, idDose string, owner
 		if err = s.repo.Delete(ctx, id); err != nil {
 			return InjectionModel{}, err
 		}
+		//чистим данные по прошлым расчётам
+		errDelete := s.repo.DeleteConcentration(ctx, owner, id)
+		if errDelete != nil {
+			return InjectionModel{}, errDelete
+		}
 		return InjectionModel{}, nil
 	}
 
