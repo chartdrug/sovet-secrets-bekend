@@ -20,6 +20,10 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	r.Get("/api/antros", res.get)
 	r.Delete("/api/antros/<id>", res.delete)
 	r.Post("/api/antros", res.create)
+
+	r.Get("/api/adalo/antros/<username>", res.getAdalo)
+	r.Delete("/api/adalo/antros/<username>/<id>", res.delete)
+	r.Post("/api/adalo/antros/<username>", res.create)
 }
 
 type resource struct {
@@ -47,6 +51,32 @@ func (r resource) get(c *routing.Context) error {
 	} else {
 		return err
 	}
+
+}
+
+func (r resource) getAdalo(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	user1, err1 := r.service.GetByLogin(c.Request.Context(), c.Param("username"))
+
+	if err1 != nil {
+		fmt.Println(err1)
+		return err1
+	}
+
+	_, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	profile, err := r.service.Get(c.Request.Context(), user1.ID)
+	if err != nil {
+		return err
+	}
+
+	return c.Write(profile)
 
 }
 

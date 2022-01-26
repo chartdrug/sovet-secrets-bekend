@@ -15,6 +15,7 @@ type Service interface {
 	Get(ctx context.Context, owner string) ([]Antro, error)
 	Delete(ctx context.Context, id string) (Antro, error)
 	Create(ctx context.Context, input CreateAntroRequest, owner string) (Antro, error)
+	GetByLogin(ctx context.Context, login string) (entity.Users, error)
 }
 
 // Album represents the data about an album.
@@ -192,4 +193,12 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 	}
 
 	return s.GetOne(ctx, e.ID)
+}
+
+func (s service) GetByLogin(ctx context.Context, login string) (entity.Users, error) {
+	users, err := s.repo.GetByLogin(ctx, login)
+	if err != nil {
+		return entity.Users{}, err
+	}
+	return users, nil
 }

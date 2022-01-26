@@ -15,6 +15,7 @@ type Repository interface {
 	Create(ctx context.Context, album entity.Antro) error
 	Update(ctx context.Context, album entity.Antro) error
 	GetProfile(ctx context.Context, id string) (entity.Users, error)
+	GetByLogin(ctx context.Context, login string) (entity.Users, error)
 }
 
 type repository struct {
@@ -57,5 +58,11 @@ func (r repository) Update(ctx context.Context, antro entity.Antro) error {
 func (r repository) GetProfile(ctx context.Context, id string) (entity.Users, error) {
 	var user entity.Users
 	err := r.db.With(ctx).Select().Model(id, &user)
+	return user, err
+}
+
+func (r repository) GetByLogin(ctx context.Context, login string) (entity.Users, error) {
+	var user entity.Users
+	err := r.db.With(ctx).Select().Where(dbx.HashExp{"login": login}).One(&user)
 	return user, err
 }
