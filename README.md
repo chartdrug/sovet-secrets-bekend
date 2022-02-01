@@ -226,10 +226,18 @@ command,
 
 ```shell
 chmod 400 sovet-ZEFNmBra.pem 
+chmod 400 amaz.pem
 
+-- vk
 docker save server:latest | bzip2 | ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247 docker load
+-- amazon
+docker save server:latest | bzip2 | ssh -i amaz.pem ec2-user@35.175.222.125 docker load
 
+
+-- vk
 ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
+-- amaz
+ssh -i amaz.pem ec2-user@35.175.222.125
 
 docker stop server 
 docker rm server
