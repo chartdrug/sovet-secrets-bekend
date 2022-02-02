@@ -72,6 +72,7 @@ func (r resource) get(c *routing.Context) error {
 			Sex:            profile.Sex,
 			Birthday:       profile.Birthday,
 			TypeSports:     ary,
+			Admin:          profile.Admin,
 		}
 
 		//TypeSports     []string  `json:"typesports"`
