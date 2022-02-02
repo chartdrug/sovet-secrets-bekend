@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"strings"
 )
@@ -17,6 +18,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	// the following endpoints require a valid JWT
 
 	r.Get("/api/users", res.get)
+	r.Get("/api/drugs", res.getDrugs)
 
 }
 
@@ -77,4 +79,32 @@ func (r resource) get(c *routing.Context) error {
 		return err
 	}
 
+}
+
+func (r resource) getDrugs(c *routing.Context) error {
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		println("-------")
+		if claims["admin"] == nil || !claims["admin"].(bool) {
+			return errors.Forbidden("You are not an admin")
+		}
+
+		drug := utils.GetDrugs()
+		drugs := []utils.Drug{}
+
+		for _, item := range drug {
+			drugs = append(drugs, item)
+		}
+
+		return c.Write(drugs)
+	} else {
+		return err
+	}
 }

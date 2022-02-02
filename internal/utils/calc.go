@@ -3,17 +3,17 @@ package utils
 import "math"
 
 type Drug struct {
-	ID       string
-	name     string
-	drug     string
-	mdrug    string
-	type_    int
-	formula  string
-	mmass    float64
-	mmassm   float64
-	Out      float64
-	Outt     float64
-	Halflife int
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Drug     string  `json:"drug"`
+	Mdrug    string  `json:"mdrug"`
+	Type_    int     `json:"type_"`
+	Formula  string  `json:"formula"`
+	Mmass    float64 `json:"mmass"`
+	Mmassm   float64 `json:"mmassm"`
+	Out      float64 `json:"out"`
+	Outt     float64 `json:"outt"`
+	Halflife int     `json:"halflife"`
 }
 
 type InjBall struct {
