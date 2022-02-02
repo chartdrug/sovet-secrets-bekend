@@ -162,6 +162,16 @@ func (r resource) create(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+
+		//проверяем что объм не больше 10
+		var summ = 0.0
+		for _, item := range input.Injection_Dose {
+			summ += item.Volume
+		}
+
+		if summ > 10 || summ == 0 {
+			return errors.BadRequest("All values must be less than or equal to 10")
+		}
 		//fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		//fmt.Println(input.Injection.ID)
 		if len(input.Injection.ID) > 1 {
