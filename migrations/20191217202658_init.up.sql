@@ -227,3 +227,7 @@ create table history_login(
 CREATE INDEX idx_history_login_user ON history_login(id_user);
 
 alter table injection ADD COLUMN calc boolean default false;
+
+alter table users ADD COLUMN admin boolean default false;
+alter table users ADD COLUMN blocked boolean default false;
+alter table users ADD COLUMN blocked_at timestamp DEFAULT CURRENT_TIMESTAMP;

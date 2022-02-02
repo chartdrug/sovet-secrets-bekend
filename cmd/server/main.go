@@ -10,6 +10,7 @@ import (
 	"github.com/go-ozzo/ozzo-routing/v2/content"
 	"github.com/go-ozzo/ozzo-routing/v2/cors"
 	_ "github.com/lib/pq"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/admin"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/album"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/antros"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/auth"
@@ -126,6 +127,11 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.
 
 	spr.RegisterHandlers(rg.Group(""),
 		spr.NewService(spr.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
+
+	admin.RegisterHandlers(rg.Group(""),
+		admin.NewService(admin.NewRepository(db, logger), logger),
 		authHandler, logger,
 	)
 

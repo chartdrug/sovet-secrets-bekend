@@ -13,6 +13,7 @@ type UsersRest struct {
 	Sex            string    `json:"sex"`
 	Birthday       time.Time `json:"birthday"`
 	TypeSports     []int     `json:"typesports"`
+	Admin          bool      `json:"admin"`
 }
 
 type Users struct {
@@ -25,6 +26,26 @@ type Users struct {
 	Sex            string    `json:"sex"`
 	Birthday       time.Time `json:"birthday"`
 	TypeSports     string    `json:"typesports"`
+	Admin          bool
+}
+
+type UsersAdmin struct {
+	Id              string
+	Login           string
+	Admin           bool
+	Blocked         bool
+	Blocked_at      time.Time
+	Email           string
+	Date_registered time.Time
+	Date_lastlogin  time.Time
+	Sex             string
+	Birthday        time.Time
+	Type_sports     string
+	Country         string
+	Region          string
+	City            string
+	Count_antro     int
+	Count_injection int
 }
 
 type HistoryLogin struct {
@@ -42,4 +63,8 @@ func (u Users) GetID() string {
 }
 func (u Users) GetLogn() string {
 	return u.Login
+}
+
+func (u Users) GetAdmin() bool {
+	return u.Admin
 }
