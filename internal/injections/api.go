@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // RegisterHandlers sets up the routing of the HTTP handlers.
@@ -67,7 +68,7 @@ func (r resource) getinj(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		injection, err := r.service.Getinj(c.Request.Context(), c.Param("id"), claims["id"].(string))
+		injection, err := r.service.Getinj(c.Request.Context(), c.Param("id"), claims["id"].(string), false)
 		if err != nil {
 			return err
 		}
@@ -174,6 +175,25 @@ func (r resource) create(c *routing.Context) error {
 		injection, err := r.service.Create(c.Request.Context(), input, claims["id"].(string))
 		if err != nil {
 			return err
+		}
+		//делаем расчёт для сохранения в БД
+		go r.service.Getinj(c.Request.Context(), injection.Injection.ID, claims["id"].(string), true)
+
+		fmt.Println("Sleep 1 second")
+		time.Sleep(1 * time.Second)
+
+		for i := 0; i <= 3; i++ {
+			fmt.Println("Start check status")
+
+			injOne, errinjOne := r.service.GetinjOne(c.Request.Context(), injection.Injection.ID)
+			if errinjOne != nil {
+				return errinjOne
+			}
+			if injOne.Injection.Calc {
+				break
+			}
+			fmt.Println("retray GetinjOne")
+			fmt.Println("Sleep 1 second")
 		}
 
 		return c.WriteWithStatus(injection, http.StatusCreated)

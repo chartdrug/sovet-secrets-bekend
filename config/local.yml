@@ -3,8 +3,8 @@
 #dsn: "postgres://tyswoumt:yA9qwnAbLomPoH-TzudXXz52hkigwOBJ@batyr.db.elephantsql.com/tyswoumt"
 #dsn: "postgres://chartdrug:yA9qwnAbLomPoH-TzudXXz52hkigwOBJ@postgresql-61526-0.cloudclusters.net:11750/chartdrug"
 #VK
-#dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@213.219.213.247:5432/chatrdrug?sslmode=disable"
+dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@213.219.213.247:5432/chatrdrug?sslmode=disable"
 #Amazon
-dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@35.175.222.125:5432/chatrdrug?sslmode=disable"
+#dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@35.175.222.125:5432/chatrdrug?sslmode=disable"
 jwt_signing_key: "LxsKJywDL5O5PvgODZhBH12KE6k2yL8E"
 #jwt_expiration: "1";

@@ -16,7 +16,8 @@ import (
 // Service encapsulates usecase logic for albums.
 type Service interface {
 	GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error)
-	Getinj(ctx context.Context, id string, owner string) (Points, error)
+	Getinj(ctx context.Context, id string, owner string, save bool) (Points, error)
+	GetinjOne(ctx context.Context, id string) (InjectionModel, error)
 	GetinjReort(ctx context.Context, owner string, sDate string, fDate string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
@@ -249,8 +250,9 @@ func contains(s []string, searchterm string) bool {
 	return i < len(s) && s[i] == searchterm
 }
 
-func (s service) Getinj(ctx context.Context, id string, owner string) (Points, error) {
+func (s service) Getinj(ctx context.Context, id string, owner string, save bool) (Points, error) {
 	logger := s.logger.With(ctx, "id", id)
+	logger.Infof("Getinj start")
 
 	injection, err := s.GetOne(ctx, id)
 	if err != nil {
@@ -600,9 +602,9 @@ func (s service) Getinj(ctx context.Context, id string, owner string) (Points, e
 	//	return Points{}, errDelete
 	//}
 	//сохроняем в БД если ранее не делали
-	fmt.Println(injection.Injection.ID)
-	fmt.Println(injection.Injection.Calc)
-	if !injection.Injection.Calc {
+	//fmt.Println(injection.Injection.ID)
+	//fmt.Println(injection.Injection.Calc)
+	if !injection.Injection.Calc && save {
 		injection.Injection.Calc = true
 		fmt.Println(1111111)
 		errUpdateInjection := s.repo.UpdateInjection(ctx, injection.Injection)
@@ -773,6 +775,17 @@ func (s service) DeleteDose(ctx context.Context, id string, idDose string, owner
 			return InjectionModel{}, errDelete
 		}
 		return InjectionModel{}, nil
+	}
+
+	return injection, nil
+}
+
+func (s service) GetinjOne(ctx context.Context, id string) (InjectionModel, error) {
+
+	injection, err := s.GetOne(ctx, id)
+
+	if err != nil {
+		return InjectionModel{}, err
 	}
 
 	return injection, nil
