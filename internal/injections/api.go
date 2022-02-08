@@ -169,7 +169,7 @@ func (r resource) create(c *routing.Context) error {
 			summ += item.Volume
 		}
 
-		if summ > 10 || summ == 0 {
+		if summ > 10 {
 			return errors.BadRequest("All values must be less than or equal to 10")
 		}
 		//fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")

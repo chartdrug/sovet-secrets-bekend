@@ -245,9 +245,34 @@ docker rm server
 docker run -it --rm -d -p 8080:8080 --name server server
 docker stop server && docker rm server && docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
 
+echo '' | sudo tee -a nginx.conf
+
 cd /etc/nginx
+sudo systemctl start nginx
+sudo systemctl stop nginx
 sudo systemctl reload nginx
 sudo systemctl status nginx
+
+sudo systemctl stop httpd.service
+sudo systemctl status httpd.service
+sudo systemctl start httpd.service
+sudo systemctl reload httpd.service
+
+cd /etc/httpd/conf.d
+sudo nano yourDomainName.conf
+
+https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-centos-7
+перевыпуск серта 
+sudo systemctl stop nginx
+sudo systemctl start httpd.service
+sudo certbot --apache -d chartdrug.com -d www.chartdrug.com -d www.calcpharm.com -d calcpharm.com
+sudo systemctl stop httpd.service && sudo systemctl start nginx
+
+серты тут
+/etc/letsencrypt/live/chartdrug.com/fullchain.pem
+Your key file has been saved at:
+/etc/letsencrypt/live/chartdrug.com/privkey.pem
+
 
 docker exec -it server bash
 
