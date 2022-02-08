@@ -57,6 +57,15 @@ type HistoryLogin struct {
 	City      string    `json:"City"`
 }
 
+type Feedback struct {
+	Id       string    `json:"id"`
+	Owner    string    `json:"owner"`
+	Dt       time.Time `json:"dt"`
+	Email    string    `json:"email"`
+	Name     string    `json:"name"`
+	Feedback string    `json:"feedback"`
+}
+
 // GetID returns the user ID.
 func (u Users) GetID() string {
 	return u.ID

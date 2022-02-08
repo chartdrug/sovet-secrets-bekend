@@ -9,6 +9,9 @@ import (
 
 type Repository interface {
 	GetAll(ctx context.Context) ([]entity.UsersAdmin, error)
+	CreateFeedBack(ctx context.Context, antro entity.Feedback) error
+	GetFeedBack(ctx context.Context, id string) (entity.Feedback, error)
+	GetAllFeedback(ctx context.Context) ([]entity.Feedback, error)
 }
 
 type repository struct {
@@ -32,4 +35,22 @@ func (r repository) GetAll(ctx context.Context) ([]entity.UsersAdmin, error) {
 		"order by date_lastlogin desc").All(&users)
 
 	return users, err
+}
+
+func (r repository) CreateFeedBack(ctx context.Context, antro entity.Feedback) error {
+	return r.db.With(ctx).Model(&antro).Insert()
+}
+
+func (r repository) GetFeedBack(ctx context.Context, id string) (entity.Feedback, error) {
+	var user entity.Feedback
+	err := r.db.With(ctx).Select().Model(id, &user)
+	return user, err
+}
+
+func (r repository) GetAllFeedback(ctx context.Context) ([]entity.Feedback, error) {
+	var feedback []entity.Feedback
+
+	err := r.db.With(ctx).NewQuery("SELECT id, owner, dt, email, name, feedback FROM feedback order by dt desc;").All(&feedback)
+
+	return feedback, err
 }

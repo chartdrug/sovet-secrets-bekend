@@ -231,3 +231,12 @@ alter table injection ADD COLUMN calc boolean default false;
 alter table users ADD COLUMN admin boolean default false;
 alter table users ADD COLUMN blocked boolean default false;
 alter table users ADD COLUMN blocked_at timestamp DEFAULT CURRENT_TIMESTAMP;
+
+CREATE TABLE feedback (
+   id uuid NOT NULL,
+   owner text NOT NULL DEFAULT '-',
+   dt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   email text NOT NULL,
+   name text NOT NULL,
+   feedback text NOT NULL
+);
