@@ -240,3 +240,5 @@ CREATE TABLE feedback (
    name text NOT NULL,
    feedback text NOT NULL
 );
+alter table feedback ADD COLUMN location text NOT NULL DEFAULT '-';
+

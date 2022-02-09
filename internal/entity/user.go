@@ -64,6 +64,7 @@ type Feedback struct {
 	Email    string    `json:"email"`
 	Name     string    `json:"name"`
 	Feedback string    `json:"feedback"`
+	Location string    `json:"location"`
 }
 
 // GetID returns the user ID.

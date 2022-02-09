@@ -28,6 +28,7 @@ type CreateFeedBack struct {
 	Email    string `json:"email"`
 	Feedback string `json:"feedback"`
 	Name     string `json:"name"`
+	Location string `json:"location"`
 }
 
 // NewService creates a new album service.
@@ -55,6 +56,7 @@ func (s service) CreateFeedBack(ctx context.Context, req CreateFeedBack, owner s
 		Email:    req.Email,
 		Name:     req.Name,
 		Feedback: req.Feedback,
+		Location: req.Location,
 	})
 	if err != nil {
 		return entity.Feedback{}, err

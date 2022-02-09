@@ -50,7 +50,7 @@ func (r repository) GetFeedBack(ctx context.Context, id string) (entity.Feedback
 func (r repository) GetAllFeedback(ctx context.Context) ([]entity.Feedback, error) {
 	var feedback []entity.Feedback
 
-	err := r.db.With(ctx).NewQuery("SELECT id, owner, dt, email, name, feedback FROM feedback order by dt desc;").All(&feedback)
+	err := r.db.With(ctx).NewQuery("SELECT id, owner, dt, email, name, feedback, location FROM feedback order by dt desc").All(&feedback)
 
 	return feedback, err
 }
