@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
 	"math"
 	"net/http"
@@ -79,6 +80,21 @@ func (r resource) getinj(c *routing.Context) error {
 				injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
 			}
 		}
+		//получаем обём крови
+		antro, errAntro := r.service.GetForBloodVolume(c.Request.Context(), claims["id"].(string))
+		if errAntro != nil {
+			return errAntro
+		}
+
+		var BloodVolume = utils.GetBloodVolume(claims["sex"].(string), antro)
+
+		//кол-во доступных вариантов крови
+		var b = 0
+		var lb = len(BloodVolume)
+
+		if lb == 0 {
+			return errors.NotFound("Вам нужно заполнить информацию по aнтропометрии")
+		}
 
 		//удаляем всё что меньше 0.2 и делаем округелние
 		for i := len(injection.Points) - 1; i >= 0; i-- {
@@ -90,8 +106,19 @@ func (r resource) getinj(c *routing.Context) error {
 				injection.Points = append(injection.Points[:i],
 					injection.Points[i+1:]...)
 			} else {
+				// если расчёт крови боль даты инькции и есть ещё древние то смещаемся пока не найдём
+				if BloodVolume[b].Dt > application.Dt && b != lb-1 {
+					fmt.Println("----")
+					for y := b; y < lb; y++ {
+						if BloodVolume[y].Dt <= application.Dt {
+							b = y
+							break
+						}
+					}
+				}
 				for y := 0; y < len(application.PointValues); y++ {
-					application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
+					//application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
+					application.PointValues[y].CCT = math.Round((((application.PointValues[y].CCT/288431)*1000000000)/BloodVolume[b].V)*1000) / 1000
 				}
 
 			}
@@ -121,6 +148,23 @@ func (r resource) getReort(c *routing.Context) error {
 		}
 
 		first := true
+
+		//получаем обём крови
+		antro, errAntro := r.service.GetForBloodVolume(c.Request.Context(), claims["id"].(string))
+		if errAntro != nil {
+			return errAntro
+		}
+
+		var BloodVolume = utils.GetBloodVolume(claims["sex"].(string), antro)
+
+		//кол-во доступных вариантов крови
+		var b = 0
+		var lb = len(BloodVolume)
+
+		if lb == 0 {
+			return errors.NotFound("Вам нужно заполнить информацию по aнтропометрии")
+		}
+
 		for i := len(injection.Points) - 1; i >= 0; i-- {
 
 			//fmt.Println("test2")
@@ -134,7 +178,8 @@ func (r resource) getReort(c *routing.Context) error {
 			} else {
 				first = false
 				for y := 0; y < len(application.PointValues); y++ {
-					application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
+					//application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
+					application.PointValues[y].CCT = math.Round((((application.PointValues[y].CCT/288431)*1000000000)/BloodVolume[b].V)*1000) / 1000
 				}
 			}
 		}

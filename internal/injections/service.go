@@ -22,6 +22,7 @@ type Service interface {
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
+	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
 }
 
 // Album represents the data about an album.
@@ -789,4 +790,12 @@ func (s service) GetinjOne(ctx context.Context, id string) (InjectionModel, erro
 	}
 
 	return injection, nil
+}
+
+func (s service) GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error) {
+	antro, err := s.repo.GetForBloodVolume(ctx, owner)
+	if err != nil {
+		return []entity.Antro{}, err
+	}
+	return antro, nil
 }

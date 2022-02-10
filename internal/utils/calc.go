@@ -1,6 +1,9 @@
 package utils
 
-import "math"
+import (
+	"github.com/qiangxue/sovet-secrets-bekend/internal/entity"
+	"math"
+)
 
 type Drug struct {
 	ID       string  `json:"id"`
@@ -29,6 +32,11 @@ type InjBall struct {
 	R        float64
 	skin     float64
 	pending  bool
+}
+
+type BloodVolume struct {
+	Dt int64
+	V  float64
 }
 
 const ZERO = 1e-6 //что считать нулем
@@ -236,4 +244,21 @@ func (InjBall *InjBall) ballOut() (int64, int64) {
 
 	return int64(dv * InjBall.outK), int64(dv * InjBall.outKT)
 
+}
+
+func GetBloodVolume(sex string, antros []entity.Antro) []BloodVolume {
+	var b []BloodVolume
+
+	for _, antro := range antros {
+		var V = 0.0
+		if sex == "M" {
+			V = math.Pow(antro.Result_fat, -0.114) * antro.General_weight * 98
+		} else if sex == "F" {
+			V = math.Pow(antro.Result_fat, -0.157) * antro.General_weight * 106
+		} else {
+			V = 0.0
+		}
+		b = append(b, BloodVolume{Dt: antro.Dt.Unix() * 1000, V: V})
+	}
+	return b
 }

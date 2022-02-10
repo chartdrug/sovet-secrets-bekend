@@ -30,6 +30,7 @@ type Repository interface {
 	GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 	GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 	UpdateInjection(ctx context.Context, injection entity.Injection) error
+	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
 }
 
 type repository struct {
@@ -196,4 +197,13 @@ func (r repository) UpdateInjection(ctx context.Context, injection entity.Inject
 	fmt.Println(injection.Calc)
 	_, err := r.db.With(ctx).Update("injection", dbx.Params{"calc": injection.Calc}, dbx.NewExp("id={:id}", dbx.Params{"id": injection.ID})).Execute()
 	return err
+}
+
+func (r repository) GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error) {
+	var antro []entity.Antro
+	err := r.db.With(ctx).NewQuery("(select dt,general_weight,result_fat from antro where owner={:owner} /*and dt<$2::date*/ limit 1) " +
+		"union " +
+		"(select dt,general_weight, result_fat from antro where owner={:owner}  /*and dt>=$2::date and dt<=$3::date*/) " +
+		"order by dt desc").Bind(dbx.Params{"owner": owner}).All(&antro)
+	return antro, err
 }

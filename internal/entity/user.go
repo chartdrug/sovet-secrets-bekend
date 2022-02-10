@@ -78,3 +78,7 @@ func (u Users) GetLogn() string {
 func (u Users) GetAdmin() bool {
 	return u.Admin
 }
+
+func (u Users) GetSex() string {
+	return u.Sex
+}
