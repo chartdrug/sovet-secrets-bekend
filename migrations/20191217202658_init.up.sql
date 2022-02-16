@@ -242,3 +242,15 @@ CREATE TABLE feedback (
 );
 alter table feedback ADD COLUMN location text NOT NULL DEFAULT '-';
 
+CREATE TABLE course (
+    id UUID PRIMARY KEY,
+    owner UUID NOT NULL,
+    descr VARCHAR(128) NOT NULL,
+    course_start DATE NOT NULL,
+    course_end DATE NOT NULL,
+    type VARCHAR(10) NOT NULL,
+    target text[] NOT NULL,
+    notes TEXT NOT NULL
+);
+
+CREATE INDEX idx_course ON course(owner);

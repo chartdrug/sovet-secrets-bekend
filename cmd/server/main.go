@@ -15,6 +15,7 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/internal/antros"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/auth"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/config"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/course"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/errors"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/healthcheck"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/injections"
@@ -132,6 +133,11 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.
 
 	admin.RegisterHandlers(rg.Group(""),
 		admin.NewService(admin.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
+
+	course.RegisterHandlers(rg.Group(""),
+		course.NewService(course.NewRepository(db, logger), logger),
 		authHandler, logger,
 	)
 
