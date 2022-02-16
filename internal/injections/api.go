@@ -28,6 +28,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	//r.Delete("/api/antros/<id>", res.delete)
 	r.Post("/api/injection", res.create)
 	r.Delete("/api/injection/<id>", res.delete)
+	r.Delete("/api/injections", res.deleteArray)
 	r.Delete("/api/injection/<id>/dose/<id_dose>", res.deleteDose)
 }
 
@@ -277,6 +278,40 @@ func (r resource) delete(c *routing.Context) error {
 		}
 
 		return c.Write(injection)
+
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) deleteArray(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	var input []string
+
+	if err := c.Read(&input); err != nil {
+		r.logger.With(c.Request.Context()).Info(err)
+		return errors.BadRequest("")
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+
+		for _, item := range input {
+			_, err := r.service.Delete(c.Request.Context(), item, claims["id"].(string))
+			if err != nil {
+				return err
+			}
+		}
+
+		return c.WriteWithStatus(input, http.StatusAccepted)
 
 	} else {
 		return err
