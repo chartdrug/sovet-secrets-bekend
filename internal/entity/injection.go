@@ -25,6 +25,18 @@ type Injection struct {
 	Calc     bool    `json:"-"`
 }
 
+type Injectionv2 struct {
+	ID       string
+	Owner    string   `json:"-"`
+	Date     []string `json:"date"`
+	Times    []int    `json:"times"`
+	What     string   `json:"what"`
+	TotalV   float64  `json:"-" db:"-"`
+	SkinSumm float64  `json:"-" db:"-"`
+	Skin     float64  `json:"-" db:"-"`
+	Calc     bool     `json:"-"`
+}
+
 type Concentration struct {
 	Owner        string
 	Id_injection string
@@ -38,6 +50,11 @@ type Concentration struct {
 
 type InjectionModel struct {
 	Injection      Injection        `json:"injection"`
+	Injection_Dose []Injection_Dose `json:"injection_dose"`
+}
+
+type InjectionModelv2 struct {
+	Injection      Injectionv2      `json:"injection"`
 	Injection_Dose []Injection_Dose `json:"injection_dose"`
 }
 

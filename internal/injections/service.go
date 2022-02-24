@@ -17,6 +17,7 @@ import (
 type Service interface {
 	GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error)
 	Getinj(ctx context.Context, id string, owner string, save bool) (Points, error)
+	GetinjArray(ctx context.Context, id []string, owner string, save bool) error
 	GetinjOne(ctx context.Context, id string) (InjectionModel, error)
 	GetinjReort(ctx context.Context, owner string, sDate string, fDate string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
@@ -251,6 +252,19 @@ func contains(s []string, searchterm string) bool {
 	return i < len(s) && s[i] == searchterm
 }
 
+func (s service) GetinjArray(ctx context.Context, id []string, owner string, save bool) error {
+	logger := s.logger.With(ctx, "id", id)
+	for _, item := range id {
+		_, err := s.Getinj(ctx, item, owner, save)
+		logger.Error(err)
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
+
+}
 func (s service) Getinj(ctx context.Context, id string, owner string, save bool) (Points, error) {
 	logger := s.logger.With(ctx, "id", id)
 	logger.Infof("Getinj start")
