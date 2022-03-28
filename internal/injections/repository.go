@@ -164,8 +164,13 @@ func (r repository) GetConcentrationDrugs(ctx context.Context, owner string, sd 
 
 func (r repository) GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error) {
 	var concentration []entity.Concentration
-	q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
-		"from concentration where owner = {:owner} and dt >= {:sd} and dt <= {:ed} and id_injection in (select id from injection where owner = {:owner})" +
+	/*q := r.db.With(ctx).NewQuery("select drug, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
+	"from concentration where owner = {:owner} and dt >= {:sd} and dt <= {:ed} and id_injection in (select id from injection where owner = {:owner})" +
+	"group by 1,2 order by 2").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000})*/
+	q := r.db.With(ctx).NewQuery("select drug, dt, sum(CCT) as CCT from(select drug, a.id_injection, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
+		"from concentration a where owner = {:owner} and dt >= {:sd} and dt <= {:ed} " +
+		"and id_injection in (select id from injection where owner = {:owner}) " +
+		"group by 1,2,3) a " +
 		"group by 1,2 order by 2").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000})
 	err := q.All(&concentration)
 	return concentration, err

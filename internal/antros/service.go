@@ -119,7 +119,7 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 
 	logger.Infof("General_age=" + strconv.Itoa(year))
 
-	General_age = year
+	General_age = year + 1
 
 	var s3 float64
 	var fat float64
