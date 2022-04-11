@@ -24,6 +24,8 @@ import (
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/accesslog"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/dbcontext"
 	"github.com/qiangxue/sovet-secrets-bekend/pkg/log"
+	"github.com/robfig/cron"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -75,6 +77,23 @@ func main() {
 		Handler: buildHandler(logger, dbcontext.New(db), db2, cfg),
 	}
 
+	c := cron.New()
+	c.AddFunc("@every 10s", func() {
+		//fmt.Println(time.Now())
+		response, err := http.Get("http://localhost:8080/v1/api/injectionsCall")
+
+		if err != nil {
+			logger.Error(err.Error())
+		}
+
+		responseData, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			logger.Error(err)
+		}
+		logger.Info(string(responseData))
+	})
+	c.Start()
+
 	// start the HTTP server with graceful shutdown
 	go routing.GracefulShutdown(hs, 10*time.Second, logger.Infof)
 	logger.Infof("server %v is running at %v", Version, address)
@@ -82,6 +101,7 @@ func main() {
 		logger.Error(err)
 		os.Exit(-1)
 	}
+
 }
 
 // buildHandler sets up the HTTP routing and builds an HTTP handler.

@@ -254,3 +254,5 @@ CREATE TABLE course (
 );
 
 CREATE INDEX idx_course ON course(owner);
+
+alter table injection ADD COLUMN delete boolean default false;

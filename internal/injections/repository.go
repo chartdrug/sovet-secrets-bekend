@@ -31,6 +31,8 @@ type Repository interface {
 	GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 	UpdateInjection(ctx context.Context, injection entity.Injection) error
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
+	GetInjectionLimit(ctx context.Context) ([]entity.Injection, error)
+	UpdateInjectionCalc(ctx context.Context, id string) error
 }
 
 type repository struct {
@@ -211,4 +213,15 @@ func (r repository) GetForBloodVolume(ctx context.Context, owner string) ([]enti
 		"(select dt,general_weight, result_fat from antro where owner={:owner}  /*and dt>=$2::date and dt<=$3::date*/) " +
 		"order by dt desc").Bind(dbx.Params{"owner": owner}).All(&antro)
 	return antro, err
+}
+
+func (r repository) GetInjectionLimit(ctx context.Context) ([]entity.Injection, error) {
+	var injection []entity.Injection
+	err := r.db.With(ctx).NewQuery("select * from injection where calc = false and delete = false limit 3").All(&injection)
+	return injection, err
+}
+
+func (r repository) UpdateInjectionCalc(ctx context.Context, id string) error {
+	_, err := r.db.With(ctx).Update("injection", dbx.Params{"calc": "true"}, dbx.HashExp{"id": id}).Execute()
+	return err
 }

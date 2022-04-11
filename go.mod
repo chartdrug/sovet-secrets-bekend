@@ -11,6 +11,7 @@ require (
 	github.com/ip2location/ip2location-go/v9 v9.2.0
 	github.com/lib/pq v1.2.0
 	github.com/qiangxue/go-env v1.0.0
+	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.4.0
 	go.uber.org/atomic v1.5.1 // indirect
 	go.uber.org/multierr v1.4.0 // indirect

@@ -273,7 +273,7 @@ sudo systemctl stop httpd.service && sudo systemctl start nginx
 Your key file has been saved at:
 /etc/letsencrypt/live/chartdrug.com/privkey.pem
 
-
+// logs
 docker exec -it server bash
 
 tail -n 5 /var/log/app/server.log 

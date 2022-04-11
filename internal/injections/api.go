@@ -18,6 +18,9 @@ import (
 func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routing.Handler, logger log.Logger) {
 	res := resource{service, logger}
 
+	//расчёт раз в минуту для отчёта
+	r.Get("/api/injectionsCall", res.asyncCall)
+
 	r.Use(authHandler)
 
 	// the following endpoints require a valid JWT
@@ -235,6 +238,7 @@ func (r resource) create(c *routing.Context) error {
 			return err
 		}
 		//делаем расчёт для сохранения в БД
+		/* расчёт идёт по крону
 		go r.service.Getinj(c.Request.Context(), injection.Injection.ID, claims["id"].(string), true)
 
 		fmt.Println("Sleep 1 second")
@@ -253,6 +257,8 @@ func (r resource) create(c *routing.Context) error {
 			fmt.Println("retray GetinjOne")
 			fmt.Println("Sleep 1 second")
 		}
+
+		*/
 
 		return c.WriteWithStatus(injection, http.StatusCreated)
 
@@ -326,7 +332,7 @@ func (r resource) create2(c *routing.Context) error {
 
 		//делаем расчёт для сохранения в БД
 		//сделать позже по массиву
-
+		/* расчёт работает по крону
 		go r.service.GetinjArray(c.Request.Context(), arrayUid, claims["id"].(string), true)
 
 		fmt.Println("Sleep 1 second")
@@ -347,7 +353,7 @@ func (r resource) create2(c *routing.Context) error {
 			fmt.Println("retray GetinjOne")
 			fmt.Println("Sleep 1 second")
 		}
-
+		*/
 		return c.WriteWithStatus(arrayUid, http.StatusCreated)
 
 	} else {
@@ -437,5 +443,15 @@ func (r resource) deleteDose(c *routing.Context) error {
 	} else {
 		return err
 	}
+
+}
+func (r resource) asyncCall(c *routing.Context) error {
+
+	err := r.service.AsyncCall(c.Request.Context())
+
+	if err != nil {
+		return err
+	}
+	return c.Write("Done asyncCall")
 
 }

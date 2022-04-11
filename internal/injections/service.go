@@ -24,6 +24,7 @@ type Service interface {
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
+	AsyncCall(ctx context.Context) error
 }
 
 // Album represents the data about an album.
@@ -256,10 +257,11 @@ func (s service) GetinjArray(ctx context.Context, id []string, owner string, sav
 	logger := s.logger.With(ctx, "id", id)
 	for _, item := range id {
 		_, err := s.Getinj(ctx, item, owner, save)
-		logger.Error(err)
 		if err != nil {
+			logger.Error(err)
 			return err
 		}
+		logger.Info("S")
 
 	}
 	return nil
@@ -619,7 +621,8 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 	//сохроняем в БД если ранее не делали
 	//fmt.Println(injection.Injection.ID)
 	//fmt.Println(injection.Injection.Calc)
-	if !injection.Injection.Calc && save {
+	//if !injection.Injection.Calc && save {
+	if save {
 		injection.Injection.Calc = true
 		fmt.Println(1111111)
 		errUpdateInjection := s.repo.UpdateInjection(ctx, injection.Injection)
@@ -812,4 +815,44 @@ func (s service) GetForBloodVolume(ctx context.Context, owner string) ([]entity.
 		return []entity.Antro{}, err
 	}
 	return antro, nil
+}
+
+func (s service) AsyncCall(ctx context.Context) error {
+	logger := s.logger.With(ctx)
+	// выбираем три укола для расчёта
+	injections, err := s.repo.GetInjectionLimit(ctx)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	logger.Info(injections)
+
+	// помечаем как начали расчёт
+	var updates []string
+	for _, injection := range injections {
+		errUpdate := s.repo.UpdateInjectionCalc(ctx, injection.ID)
+		// на случай если при update упадём
+		if errUpdate != nil {
+			logger.Error(errUpdate)
+		} else {
+			updates = append(updates, injection.ID)
+		}
+	}
+
+	for _, update := range updates {
+		logger.Info("calc start" + update)
+		for _, injection := range injections {
+			if injection.ID == update {
+				_, errGetinj := s.Getinj(ctx, update, injection.Owner, true)
+				if errGetinj != nil {
+					logger.Error(errGetinj)
+					//return err
+				}
+			}
+		}
+		logger.Info("calc end" + update)
+	}
+
+	return nil
 }
