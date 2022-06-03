@@ -125,7 +125,7 @@ func SendMailGmail(to string, subject string, body string) error {
 	m.SetHeader("Subject", subject)
 
 	// Set E-Mail body. You can set plain text or html with text/html
-	m.SetBody("text/plain", body)
+	m.SetBody("text/html", body)
 
 	// Settings for SMTP server
 	d := gomail.NewDialer("smtp.gmail.com", 587, "chartdrug@gmail.com", "ynoltzxpnezlyrto")

@@ -96,5 +96,6 @@ func (s service) generateJWT(user User) (string, error) {
 		"exp":   time.Now().Add(time.Duration(s.tokenExpiration) * time.Hour).Unix(),
 		"admin": user.GetAdmin(),
 		"sex":   user.GetSex(),
+		"email": user.GetEmail(),
 	}).SignedString([]byte(s.signingKey))
 }

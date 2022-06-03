@@ -228,14 +228,25 @@ command,
 chmod 400 sovet-ZEFNmBra.pem 
 chmod 400 amaz.pem
 
--- vk
+-- vk old
 docker save server:latest | bzip2 | ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247 docker load
+-- vk amster
+docker save server:latest | bzip2 | ssh -i vk_amster.pem centos@89.208.219.91 docker load
+-- amster
+docker save server:latest | bzip2 | ssh -i amster.pem centos@89.208.219.143 docker load
+
 -- amazon
 docker save server:latest | bzip2 | ssh -i amaz.pem ec2-user@35.175.222.125 docker load
 
 
+
 -- vk
 ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
+-- vk amster
+ssh -i vk_amster.pem centos@89.208.219.91
+-- amster
+ssh -i amster.pem ubuntu@89.208.219.143
+
 -- amaz
 ssh -i amaz.pem ec2-user@35.175.222.125
 
@@ -246,6 +257,21 @@ docker run -it --rm -d -p 8080:8080 --name server server
 docker stop server && docker rm server && docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
 
 echo '' | sudo tee -a nginx.conf
+
+
+
+scp -r -i vk_amster.pem config/nginx.conf centos@89.208.219.91:/home/centos/nginx 
+scp -r -i vk_amster.pem config/privkey.pem centos@89.208.219.91:/home/centos/nginx 
+scp -r -i vk_amster.pem config/fullchain.pem centos@89.208.219.91:/home/centos/nginx 
+
+sudo cp /home/centos/nginx/* /etc/nginx
+
+chmod g+x /home/centos && chmod g+x /home/centos/front
+
+chmod +x /home/centos/front
+
+sudo cp -r /home/centos/front/* /usr/share/nginx/html
+
 
 cd /etc/nginx
 sudo systemctl start nginx
@@ -276,7 +302,7 @@ Your key file has been saved at:
 // logs
 docker exec -it server bash
 
-tail -n 5 /var/log/app/server.log 
+tail -n 50000 /var/log/app/server.log 
 
 sudo cd /var/log/nginx
 
@@ -284,6 +310,12 @@ docker images --all
 docker logs server
 
 
+// POSTGRES_DB
+docker logs habr-pg-13.3
+docker exec -it habr-pg-13.3 bash
+
+установка постгри в контейнере 
+https://habr.com/ru/post/578744/
 
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data -v "/absolute/path/to/directory-with-init-scripts":/docker-entrypoint-initdb.d postgres:13.3
 docker run --name habr-pg-13.3 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data postgres:13.3
@@ -292,6 +324,32 @@ docker run -it -d --restart unless-stopped -p 5432:5432 --name habr-pg-13.3 post
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "$(pwd)":/var/lib/postgresql/data -v "$(pwd)/../2. Init Database":/docker-entrypoint-initdb.d postgres:13.3
 
 docker run --restart always --name mail -p 587:587 -e RELAY_HOST=smtp.chartdrug.com -e RELAY_PORT=587 -e RELAY_USERNAME=info@chartdrug.com -e RELAY_PASSWORD=secretpassword -d bytemark/smtp
+
+docker-compose -f pg-compose.yml up
+
+
+scp -i vk_amster.pem config/pg-compose.yml centos@89.208.219.91:/home/centos/pg 
+
+
+данны бд
+/absolute/path/to/directory-with-data
+
+[centos@sovet directory-with-data]$ sudo cp -R pgdata /home/centos/pg/pgdata
+
+
+/home/centos/pg
+
+
+утсановка nginx
+
+sudo dnf install nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+
+
+sudo yum install -y yum-utilssudo dnf install yum
+
 
 
 ```

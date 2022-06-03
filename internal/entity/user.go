@@ -82,3 +82,6 @@ func (u Users) GetAdmin() bool {
 func (u Users) GetSex() string {
 	return u.Sex
 }
+func (u Users) GetEmail() string {
+	return u.Email
+}

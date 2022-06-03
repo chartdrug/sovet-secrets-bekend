@@ -217,7 +217,7 @@ func (r repository) GetForBloodVolume(ctx context.Context, owner string) ([]enti
 
 func (r repository) GetInjectionLimit(ctx context.Context) ([]entity.Injection, error) {
 	var injection []entity.Injection
-	err := r.db.With(ctx).NewQuery("select * from injection where calc = false and delete = false limit 3").All(&injection)
+	err := r.db.With(ctx).NewQuery("select * from injection where calc = false and delete = false limit 1").All(&injection)
 	return injection, err
 }
 
