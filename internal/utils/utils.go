@@ -4,7 +4,10 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"github.com/Shopify/sarama"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	gomail "gopkg.in/mail.v2"
+	"log"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -113,6 +116,7 @@ func SendMail(addr, from, subject, body string, to []string) error {
 }
 
 func SendMailGmail(to string, subject string, body string) error {
+	fmt.Printf("SendMailGmail to(%s)/subject(%s)/body(%s)\n", to, subject, body)
 	m := gomail.NewMessage()
 
 	// Set E-Mail sender
@@ -137,8 +141,60 @@ func SendMailGmail(to string, subject string, body string) error {
 	// Now send E-Mail
 	if err := d.DialAndSend(m); err != nil {
 		fmt.Println(err)
-		panic(err)
+		//panic(err)
 		return err
 	}
 	return nil
+}
+
+func SendMailError(subject string, body string) {
+	err := SendMailGmail("chartdrug@gmail.com", "Ошибка сервера: "+subject, body)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func SendMsgInjection(uids []string) {
+
+	var (
+		brokerList = kingpin.Flag("brokerList", "List of brokers to connect").Default("89.208.219.91:9092").Strings()
+		topic      = kingpin.Flag("topic", "Topic name").Default("calc_injection").String()
+		maxRetry   = kingpin.Flag("maxRetry", "Retry limit").Default("5").Int()
+	)
+
+	kingpin.Parse()
+	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = *maxRetry
+	config.Producer.Return.Successes = true
+	producer, err := sarama.NewSyncProducer(*brokerList, config)
+	if err != nil {
+		SendMailError("sarama.NewSyncProducer", err.Error())
+		log.Printf(err.Error())
+	}
+	defer func() {
+		if err := producer.Close(); err != nil {
+			log.Printf(err.Error())
+		}
+	}()
+	for _, uid := range uids {
+		msg := &sarama.ProducerMessage{
+			Topic: *topic,
+			Value: sarama.StringEncoder(uid),
+		}
+		partition, offset, err := producer.SendMessage(msg)
+		if err != nil {
+			SendMailError("producer.SendMessage", err.Error())
+			log.Printf(err.Error())
+		}
+
+		log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", *topic, partition, offset)
+	}
+
+	/*
+		if err := producer.Close(); err != nil {
+			SendMailError("producer.Close()", err.Error())
+			log.Printf(err.Error())
+		}*/
+
 }

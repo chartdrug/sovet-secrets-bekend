@@ -20,6 +20,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 
 	//расчёт раз в минуту для отчёта
 	r.Get("/api/injectionsCall", res.asyncCall)
+	r.Get("/api/injectionsCall/<id>", res.asyncCall)
 
 	r.Use(authHandler)
 
@@ -354,6 +355,7 @@ func (r resource) create2(c *routing.Context) error {
 			fmt.Println("Sleep 1 second")
 		}
 		*/
+
 		return c.WriteWithStatus(arrayUid, http.StatusCreated)
 
 	} else {
@@ -453,5 +455,15 @@ func (r resource) asyncCall(c *routing.Context) error {
 		return err
 	}
 	return c.Write("Done asyncCall")
+
+}
+func (r resource) asyncCallId(c *routing.Context) error {
+
+	err := r.service.AsyncCallID(c.Request.Context(), c.Param("id"))
+
+	if err != nil {
+		return err
+	}
+	return c.Write("Done AsyncCallID")
 
 }

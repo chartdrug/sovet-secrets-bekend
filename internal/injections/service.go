@@ -25,6 +25,7 @@ type Service interface {
 	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
 	AsyncCall(ctx context.Context) error
+	AsyncCallID(ctx context.Context, id string) error
 }
 
 // Album represents the data about an album.
@@ -275,6 +276,8 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 	if err != nil {
 		return Points{}, err
 	}
+
+	owner = injection.Injection.Owner
 
 	result := Points{}
 
@@ -704,6 +707,7 @@ func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner 
 			Solvent:      item.Solvent,
 		})
 		if err != nil {
+			utils.SendMailError("s.repo.CreateInjectionDose", err.Error())
 			return InjectionModel{}, err
 		}
 	}
@@ -715,8 +719,15 @@ func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner 
 		What:  req.Injection.What,
 	})
 	if err != nil {
+		utils.SendMailError("s.repo.CreateInjection", err.Error())
 		return InjectionModel{}, err
 	}
+
+	//отправляем в кафку для рассчёта
+	var arr []string
+	arr = append(arr, id)
+	utils.SendMsgInjection(arr)
+
 	return s.GetOne(ctx, id)
 }
 
@@ -853,6 +864,22 @@ func (s service) AsyncCall(ctx context.Context) error {
 		}
 		logger.Info("calc end" + update)
 	}
+
+	return nil
+}
+
+func (s service) AsyncCallID(ctx context.Context, id string) error {
+	logger := s.logger.With(ctx)
+
+	logger.Info("calc start" + id)
+	{
+		_, errGetinj := s.Getinj(ctx, id, "-", true)
+		if errGetinj != nil {
+			logger.Error(errGetinj)
+			return errGetinj
+		}
+	}
+	logger.Info("calc end" + id)
 
 	return nil
 }

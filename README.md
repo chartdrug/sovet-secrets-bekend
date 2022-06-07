@@ -254,7 +254,11 @@ docker stop server
 docker rm server
 
 docker run -it --rm -d -p 8080:8080 --name server server
+docker run -it --rm -d -v /home/centos/logs:/var/log/app -p 8080:8080 --name server server 
 docker stop server && docker rm server && docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
+
+docker-compose -f docker-compose.yml up
+
 
 echo '' | sudo tee -a nginx.conf
 
@@ -319,6 +323,7 @@ https://habr.com/ru/post/578744/
 
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data -v "/absolute/path/to/directory-with-init-scripts":/docker-entrypoint-initdb.d postgres:13.3
 docker run --name habr-pg-13.3 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data postgres:13.3
+docker run --name habr-pg-13.3-2 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/home/centos/pg":/var/lib/postgresql/data postgres:13.3
 docker run -it -d --restart unless-stopped -p 5432:5432 --name habr-pg-13.3 postgres:13.3
 
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "$(pwd)":/var/lib/postgresql/data -v "$(pwd)/../2. Init Database":/docker-entrypoint-initdb.d postgres:13.3
@@ -350,7 +355,20 @@ sudo systemctl start nginx
 
 sudo yum install -y yum-utilssudo dnf install yum
 
+// kafka
+https://developer.confluent.io/quickstart/kafka-docker/
 
+scp -i vk_amster.pem config/kafka-compose.yml centos@89.208.219.91:/home/centos/kafka 
+
+docker-compose -f kafka-compose.yml up -d
+
+docker exec broker \
+kafka-topics --bootstrap-server broker:9092 \
+             --create \
+             --topic calc_injection
+             
+// если докер не стартует             
+sudo dockerd
 
 ```
 

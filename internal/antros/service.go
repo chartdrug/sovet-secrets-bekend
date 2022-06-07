@@ -188,6 +188,7 @@ func (s service) Create(ctx context.Context, req CreateAntroRequest, owner strin
 	} else {
 		err := s.repo.Create(ctx, e)
 		if err != nil {
+			utils.SendMailError("antros Create", err.Error())
 			return Antro{}, err
 		}
 	}
