@@ -20,7 +20,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 
 	//расчёт раз в минуту для отчёта
 	r.Get("/api/injectionsCall", res.asyncCall)
-	r.Get("/api/injectionsCall/<id>", res.asyncCall)
+	r.Get("/api/injectionsCall/<id>", res.asyncCallId)
 
 	r.Use(authHandler)
 
@@ -234,7 +234,7 @@ func (r resource) create(c *routing.Context) error {
 			}
 		}
 
-		injection, err := r.service.Create(c.Request.Context(), input, claims["id"].(string))
+		err := r.service.Create(c.Request.Context(), input, claims["id"].(string))
 		if err != nil {
 			return err
 		}
@@ -261,7 +261,7 @@ func (r resource) create(c *routing.Context) error {
 
 		*/
 
-		return c.WriteWithStatus(injection, http.StatusCreated)
+		return c.WriteWithStatus("injection", http.StatusCreated)
 
 	} else {
 		return err
@@ -308,7 +308,7 @@ func (r resource) create2(c *routing.Context) error {
 				}
 			}*/
 
-		var arrayUid []string
+		//var arrayUid []string
 
 		for _, d := range input.Injection.Date {
 			for _, t := range input.Injection.Times {
@@ -323,11 +323,11 @@ func (r resource) create2(c *routing.Context) error {
 
 				inj.Injection.What = input.Injection.What
 
-				injection, err := r.service.Create(c.Request.Context(), inj, claims["id"].(string))
+				err := r.service.Create(c.Request.Context(), inj, claims["id"].(string))
 				if err != nil {
 					return err
 				}
-				arrayUid = append(arrayUid, injection.Injection.ID)
+				//arrayUid = append(arrayUid, injection.Injection.ID)
 			}
 		}
 
@@ -356,7 +356,7 @@ func (r resource) create2(c *routing.Context) error {
 		}
 		*/
 
-		return c.WriteWithStatus(arrayUid, http.StatusCreated)
+		return c.WriteWithStatus("arrayUid", http.StatusCreated)
 
 	} else {
 		return err

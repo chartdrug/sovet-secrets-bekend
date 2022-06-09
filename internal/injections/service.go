@@ -22,7 +22,8 @@ type Service interface {
 	GetinjReort(ctx context.Context, owner string, sDate string, fDate string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
-	Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
+	//Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
+	Create(ctx context.Context, input CreateInjectionsRequest, owner string) error
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
 	AsyncCall(ctx context.Context) error
 	AsyncCallID(ctx context.Context, id string) error
@@ -693,7 +694,8 @@ func (s service) GetOne(ctx context.Context, id string) (InjectionModel, error) 
 	return resultModel, nil
 }
 
-func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner string) (InjectionModel, error) {
+//func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner string) (InjectionModel, error) {
+func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner string) error {
 
 	id := entity.GenerateID()
 	// записфваем сначало применение доз
@@ -708,7 +710,7 @@ func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner 
 		})
 		if err != nil {
 			utils.SendMailError("s.repo.CreateInjectionDose", err.Error())
-			return InjectionModel{}, err
+			return err
 		}
 	}
 	// создаём сущность самого применения
@@ -720,15 +722,17 @@ func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner 
 	})
 	if err != nil {
 		utils.SendMailError("s.repo.CreateInjection", err.Error())
-		return InjectionModel{}, err
+		return err
 	}
 
 	//отправляем в кафку для рассчёта
 	var arr []string
 	arr = append(arr, id)
-	utils.SendMsgInjection(arr)
+	go func() {
+		utils.SendMsgInjection(arr)
+	}()
 
-	return s.GetOne(ctx, id)
+	return nil
 }
 
 func (s service) Delete(ctx context.Context, id string, owner string) (InjectionModel, error) {

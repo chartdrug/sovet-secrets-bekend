@@ -5,9 +5,9 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 	gomail "gopkg.in/mail.v2"
+	"log"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -155,6 +155,40 @@ func SendMailError(subject string, body string) {
 }
 
 func SendMsgInjection(uids []string) {
+	w := &kafka.Writer{
+		Addr:         kafka.TCP("89.208.219.91:9092"),
+		Topic:        "calc_injection",
+		RequiredAcks: kafka.RequireAll,
+	}
+
+	var msgs []kafka.Message
+	for _, uid := range uids {
+
+		msgs = append(msgs, kafka.Message{
+			Key: []byte(uid),
+			// create an arbitrary message payload for the value
+			Value: []byte(uid),
+		})
+	}
+
+	// Passing a context can prevent the operation from blocking indefinitely.
+	switch err := w.WriteMessages(context.Background(), msgs...).(type) {
+	case nil:
+	case kafka.WriteErrors:
+		for i := range msgs {
+			if err[i] != nil {
+				// handle the error writing msgs[i]
+				log.Printf("could not write message default" + err[i].Error())
+			}
+		}
+	default:
+		// handle other errors
+		log.Printf("could not write message default" + err.Error())
+	}
+}
+
+/*
+func SendMsgInjection(uids []string) {
 
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{"localhost:9092"},
@@ -174,6 +208,8 @@ func SendMsgInjection(uids []string) {
 		log.Printf("could not write message " + err.Error())
 	}
 }
+
+*/
 
 /*
 func SendMsgInjection(uids []string) {

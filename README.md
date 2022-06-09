@@ -260,7 +260,7 @@ docker stop server && docker rm server && docker run -it -d --restart unless-sto
 
  docker network create chart
 
-
+ssh -i vk_amster.pem centos@89.208.219.91
 docker stop centos_server_1
 docker rm centos_server_1
 rm /home/centos/logs/server.log

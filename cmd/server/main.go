@@ -41,7 +41,7 @@ import (
 var Version = "1.0.0"
 
 var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
-var brokerList = flag.String("brokerList", "localhost:9092", "broker list")
+var brokerList = flag.String("brokerList", "89.208.219.91:9092", "broker list")
 
 func main() {
 	flag.Parse()
@@ -87,56 +87,56 @@ func main() {
 	// start the HTTP server with graceful shutdown
 
 	go func() {
-		go routing.GracefulShutdown(hs, 10*time.Second, logger.Infof)
-		logger.Infof("server %v is running at %v", Version, address)
-		if err := hs.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error(err)
-			os.Exit(-1)
+		brokers := *brokerList
+		config := kafka.ReaderConfig{
+			//Brokers:         []string{"89.208.219.91:9092"},
+			Brokers: strings.Split(brokers, ","),
+			//GroupID:         kafkaClientId,
+			Topic:           "calc_injection",
+			MinBytes:        10e3,            // 10KB
+			MaxBytes:        10e6,            // 10MB
+			MaxWait:         1 * time.Second, // Maximum amount of time to wait for new data to come when fetching batches of messages from kafka.
+			ReadLagInterval: -1,
+		}
+
+		reader := kafka.NewReader(config)
+		defer reader.Close()
+
+		for {
+			m, err := reader.ReadMessage(context.Background())
+			if err != nil {
+				logger.Error("error while receiving message: %s", err.Error())
+				continue
+			}
+
+			value := m.Value
+
+			if err != nil {
+				logger.Error("error while receiving message: %s", err.Error())
+				continue
+			}
+
+			logger.Infof("message at topic/partition/offset %v/%v/%v: %s\n", m.Topic, m.Partition, m.Offset, string(value))
+
+			response, err := http.Get("http://localhost:8080/v1/api/injectionsCall/" + string(value))
+
+			if err != nil {
+				logger.Error(err.Error())
+			}
+
+			responseData, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				logger.Error(err)
+			}
+			logger.Info(string(responseData))
 		}
 	}()
 
-	brokers := *brokerList
-	config := kafka.ReaderConfig{
-		//Brokers:         []string{"89.208.219.91:9092"},
-		Brokers: strings.Split(brokers, ","),
-		//GroupID:         kafkaClientId,
-		Topic:           "calc_injection",
-		MinBytes:        10e3,            // 10KB
-		MaxBytes:        10e6,            // 10MB
-		MaxWait:         1 * time.Second, // Maximum amount of time to wait for new data to come when fetching batches of messages from kafka.
-		ReadLagInterval: -1,
-	}
-
-	reader := kafka.NewReader(config)
-	defer reader.Close()
-
-	for {
-		m, err := reader.ReadMessage(context.Background())
-		if err != nil {
-			logger.Error("error while receiving message: %s", err.Error())
-			continue
-		}
-
-		value := m.Value
-
-		if err != nil {
-			logger.Error("error while receiving message: %s", err.Error())
-			continue
-		}
-
-		logger.Infof("message at topic/partition/offset %v/%v/%v: %s\n", m.Topic, m.Partition, m.Offset, string(value))
-
-		response, err := http.Get("http://localhost:8080/v1/api/injectionsCall/" + string(value))
-
-		if err != nil {
-			logger.Error(err.Error())
-		}
-
-		responseData, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			logger.Error(err)
-		}
-		logger.Info(string(responseData))
+	go routing.GracefulShutdown(hs, 10*time.Second, logger.Infof)
+	logger.Infof("server %v is running at %v", Version, address)
+	if err := hs.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Error(err)
+		os.Exit(-1)
 	}
 
 }
