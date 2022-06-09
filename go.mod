@@ -13,9 +13,11 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/ip2location/ip2location-go/v9 v9.2.0
 	github.com/lib/pq v1.2.0
+	github.com/namsral/flag v1.7.4-pre
 	github.com/qiangxue/go-env v1.0.0
-	github.com/robfig/cron v1.2.0
-	github.com/stretchr/testify v1.7.0
+	github.com/rs/zerolog v1.27.0
+	github.com/segmentio/kafka-go v0.4.32
+	github.com/stretchr/testify v1.7.1
 	go.uber.org/atomic v1.5.1 // indirect
 	go.uber.org/multierr v1.4.0 // indirect
 	go.uber.org/zap v1.13.0

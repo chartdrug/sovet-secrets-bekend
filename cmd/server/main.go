@@ -5,6 +5,10 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/segmentio/kafka-go"
+	"io/ioutil"
+	"strings"
+
 	//"github.com/Shopify/sarama"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/go-ozzo/ozzo-routing/v2"
@@ -37,6 +41,7 @@ import (
 var Version = "1.0.0"
 
 var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
+var brokerList = flag.String("brokerList", "localhost:9092", "broker list")
 
 func main() {
 	flag.Parse()
@@ -89,72 +94,51 @@ func main() {
 			os.Exit(-1)
 		}
 	}()
-	/*
-		var (
-			brokerList        = kingpin.Flag("brokerList", "List of brokers to connect").Default("89.208.219.91:9092").Strings()
-			topic             = kingpin.Flag("topic", "Topic name").Default("calc_injection").String()
-			//partition         = kingpin.Flag("partition", "Partition number").Default("0").String()
-			//offsetType        = kingpin.Flag("offsetType", "Offset Type (OffsetNewest | OffsetOldest)").Default("-1").Int()
-			messageCountStart = kingpin.Flag("messageCountStart", "Message counter start from:").Int()
-		)
 
-		logger.Info("1")
+	brokers := *brokerList
+	config := kafka.ReaderConfig{
+		//Brokers:         []string{"89.208.219.91:9092"},
+		Brokers: strings.Split(brokers, ","),
+		//GroupID:         kafkaClientId,
+		Topic:           "calc_injection",
+		MinBytes:        10e3,            // 10KB
+		MaxBytes:        10e6,            // 10MB
+		MaxWait:         1 * time.Second, // Maximum amount of time to wait for new data to come when fetching batches of messages from kafka.
+		ReadLagInterval: -1,
+	}
 
-		kingpin.Parse()
-		newConfig := sarama.NewConfig()
-		newConfig.Consumer.Return.Errors = true
-		//newConfig.Consumer.Group.InstanceId = "group-main"
-		brokers := *brokerList
-		master, errConsumer := sarama.NewConsumer(brokers, newConfig)
-		if errConsumer != nil {
+	reader := kafka.NewReader(config)
+	defer reader.Close()
+
+	for {
+		m, err := reader.ReadMessage(context.Background())
+		if err != nil {
+			logger.Error("error while receiving message: %s", err.Error())
+			continue
+		}
+
+		value := m.Value
+
+		if err != nil {
+			logger.Error("error while receiving message: %s", err.Error())
+			continue
+		}
+
+		logger.Infof("message at topic/partition/offset %v/%v/%v: %s\n", m.Topic, m.Partition, m.Offset, string(value))
+
+		response, err := http.Get("http://localhost:8080/v1/api/injectionsCall/" + string(value))
+
+		if err != nil {
+			logger.Error(err.Error())
+		}
+
+		responseData, err := ioutil.ReadAll(response.Body)
+		if err != nil {
 			logger.Error(err)
 		}
-		defer func() {
-			if errConsumer := master.Close(); errConsumer != nil {
-				logger.Error(errConsumer)
-			}
-		}()
+		logger.Info(string(responseData))
+	}
 
-		logger.Info("1")
-
-		consumer, errConsumer := master.ConsumePartition(*topic, 0, sarama.OffsetNewest)
-		if err != nil {
-			logger.Error(errConsumer)
-		}
-		signals := make(chan os.Signal, 1)
-		signal.Notify(signals, os.Interrupt)
-		doneCh := make(chan struct{})
-		go func() {
-			for {
-				select {
-				case errConsumer2 := <-consumer.Errors():
-					logger.Error(consumer.Errors())
-					fmt.Println(errConsumer2)
-				case msg := <-consumer.Messages():
-					*messageCountStart++
-					//fmt.Println("Sleep 10 second")
-					//time.Sleep(5 * time.Second)
-					logger.Info("Received messages", string(msg.Key), string(msg.Value))
-					response, err := http.Get("http://localhost:8080/v1/api/injectionsCall")
-
-					if err != nil {
-						logger.Error(err.Error())
-					}
-
-					responseData, err := ioutil.ReadAll(response.Body)
-					if err != nil {
-						logger.Error(err)
-					}
-					logger.Info(string(responseData))
-				case <-signals:
-					logger.Info("Interrupt is detected")
-					doneCh <- struct{}{}
-				}
-			}
-		}()
-		<-doneCh
-		logger.Info("Processed", *messageCountStart, "messages")
-	*/
 }
 
 // buildHandler sets up the HTTP routing and builds an HTTP handler.

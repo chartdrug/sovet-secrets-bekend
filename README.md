@@ -238,7 +238,7 @@ docker save server:latest | bzip2 | ssh -i amster.pem centos@89.208.219.143 dock
 -- amazon
 docker save server:latest | bzip2 | ssh -i amaz.pem ec2-user@35.175.222.125 docker load
 
-
+scp -i vk_amster.pem config/server-compose.yml centos@89.208.219.91:/home/centos 
 
 -- vk
 ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
@@ -256,6 +256,16 @@ docker rm server
 docker run -it --rm -d -p 8080:8080 --name server server
 docker run -it --rm -d -v /home/centos/logs:/var/log/app -p 8080:8080 --name server server 
 docker stop server && docker rm server && docker run -it -d --restart unless-stopped -p 8080:8080 --name server server
+
+
+ docker network create chart
+
+
+docker stop centos_server_1
+docker rm centos_server_1
+rm /home/centos/logs/server.log
+docker-compose -f server-compose.yml up -d
+docker-compose -f config/server-compose.yml up -d
 
 docker-compose -f docker-compose.yml up
 
@@ -305,6 +315,7 @@ Your key file has been saved at:
 
 // logs
 docker exec -it server bash
+docker exec -it centos_server_1 bash
 
 tail -n 50000 /var/log/app/server.log 
 
@@ -361,6 +372,7 @@ https://developer.confluent.io/quickstart/kafka-docker/
 scp -i vk_amster.pem config/kafka-compose.yml centos@89.208.219.91:/home/centos/kafka 
 
 docker-compose -f kafka-compose.yml up -d
+docker-compose -f config/kafka-compose.yml up -d
 
 docker exec broker \
 kafka-topics --bootstrap-server broker:9092 \
@@ -369,6 +381,13 @@ kafka-topics --bootstrap-server broker:9092 \
              
 // если докер не стартует             
 sudo dockerd
+
+установить curl
+apk add curl
+
+список текущих портов
+sudo ss -tlpuna
+
 
 ```
 

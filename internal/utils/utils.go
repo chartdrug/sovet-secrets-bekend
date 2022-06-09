@@ -1,13 +1,13 @@
 package utils
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/Shopify/sarama"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"github.com/rs/zerolog/log"
+	"github.com/segmentio/kafka-go"
 	gomail "gopkg.in/mail.v2"
-	"log"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -156,6 +156,28 @@ func SendMailError(subject string, body string) {
 
 func SendMsgInjection(uids []string) {
 
+	w := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: []string{"localhost:9092"},
+		Topic:   "calc_injection",
+	})
+	var msgs []kafka.Message
+	for _, uid := range uids {
+
+		msgs = append(msgs, kafka.Message{
+			Key: []byte(uid),
+			// create an arbitrary message payload for the value
+			Value: []byte(uid),
+		})
+	}
+	err := w.WriteMessages(context.Background(), msgs...)
+	if err != nil {
+		log.Printf("could not write message " + err.Error())
+	}
+}
+
+/*
+func SendMsgInjection(uids []string) {
+
 	var (
 		brokerList = kingpin.Flag("brokerList", "List of brokers to connect").Default("89.208.219.91:9092").Strings()
 		topic      = kingpin.Flag("topic", "Topic name").Default("calc_injection").String()
@@ -191,10 +213,6 @@ func SendMsgInjection(uids []string) {
 		log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", *topic, partition, offset)
 	}
 
-	/*
-		if err := producer.Close(); err != nil {
-			SendMailError("producer.Close()", err.Error())
-			log.Printf(err.Error())
-		}*/
 
 }
+*/

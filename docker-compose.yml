@@ -2,13 +2,18 @@ version: '2.1'
 services:
   server:
     image: server
-#    build:
-#      context: .
-#      dockerfile: cmd/server/Dockerfile
+    build:
+      context: .
+      dockerfile: cmd/server/Dockerfile
     volumes:
       - /Users/kdereshev/go/src/sovet-secrets-bekend/config/log:/var/log/app
     ports:
       - "8080:8080"
+    #extra_hosts:
+    #  - "host.docker.internal:127.0.0.1"
+    #network_mode: host
+    extra_hosts:
+      - "localhost:host-gateway"
     environment:
       - APP_ENV=local
 #      - APP_DSN=postgres://db/go_restful?sslmode=disable&user=postgres&password=postgres
