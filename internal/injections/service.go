@@ -634,13 +634,9 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 	//fmt.Println(injection.Injection.ID)
 	//fmt.Println(injection.Injection.Calc)
 	//if !injection.Injection.Calc && save {
-	if save {
+	if save && !injection.Injection.Calc {
 		injection.Injection.Calc = true
-		fmt.Println(1111111)
-		errUpdateInjection := s.repo.UpdateInjection(ctx, injection.Injection)
-		if errUpdateInjection != nil {
-			return Points{}, errUpdateInjection
-		}
+
 		//errGrp, _ := errgroup.WithContext(context.Background())
 
 		var arryaConcentration []entity.Concentration
@@ -675,6 +671,12 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 			logger.Infof("arryaConcentration lengt = " + fmt.Sprintf("%v", len(arryaConcentration)))
 			s.repo.SaveConcentration2(ctx, arryaConcentration)
 		}
+		errUpdateInjection := s.repo.UpdateInjection(ctx, injection.Injection)
+		if errUpdateInjection != nil {
+			return Points{}, errUpdateInjection
+		}
+	} else {
+		logger.Info("Skip save")
 	}
 
 	return result, nil

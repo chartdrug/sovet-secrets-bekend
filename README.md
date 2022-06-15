@@ -265,6 +265,10 @@ docker stop centos_server_1
 docker rm centos_server_1
 rm /home/centos/logs/server.log
 docker-compose -f server-compose.yml up -d
+
+ssh -i vk_amster.pem centos@89.208.219.91 
+docker stop centos_server_1 && docker rm centos_server_1 && docker-compose -f server-compose.yml up -d
+
 docker-compose -f config/server-compose.yml up -d
 
 docker-compose -f docker-compose.yml up
