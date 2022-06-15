@@ -1,0 +1,12 @@
+version: '2.1'
+services:
+  server:
+    image: server
+    container_name: server
+    hostname: server
+    network_mode: host
+    volumes:
+      #- /home/centos/logs:/var/log/app
+      - /Users/kdereshev/go/src/sovet-secrets-bekend/logs/log:/var/log/app
+    environment:
+      - APP_ENV=local

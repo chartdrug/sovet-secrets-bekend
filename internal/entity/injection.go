@@ -84,8 +84,9 @@ type Point struct {
 	PointValues []PointValue `json:"pointValues"`
 }
 type PointsArray struct {
-	Drugs  []string `json:"drugs"`
-	Points []Point  `json:"point"`
+	CountProcess int      `json:"countProcess"`
+	Drugs        []string `json:"drugs"`
+	Points       []Point  `json:"point"`
 }
 
 // GetID returns the user ID.

@@ -123,7 +123,7 @@ func (r resource) create(c *routing.Context) error {
 	user1, err1 := r.service.GetByLogin(c.Request.Context(), input.Login)
 
 	if err1 == nil && user1.Login == input.Login {
-		return errors.BadRequest("login exists")
+		return errors.BadRequest("Логин уже зарегистрирован в системе")
 	}
 
 	user1, err1 = r.service.GetByEmail(c.Request.Context(), input.Email)
@@ -185,14 +185,14 @@ func (r resource) update(c *routing.Context) error {
 
 		//  смена логина и проверка что он не занят
 		if err1 == nil && user1.Login == input.Login && user1.ID != claims["id"].(string) {
-			return errors.BadRequest("login exists")
+			return errors.BadRequest("Логин уже зарегистрирован в системе")
 		}
 
 		user1, err1 = r.service.GetByEmail(c.Request.Context(), input.Email)
 
 		// смена емейл и проверка что он не занят
 		if err1 == nil && user1.Email == input.Email && user1.ID != claims["id"].(string) {
-			return errors.BadRequest("Email exists")
+			return errors.BadRequest("e-mail уже зарегистрирован в системе")
 		}
 
 		//user :=entity.Users{}

@@ -136,6 +136,14 @@ func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fD
 		return Points{}, errConcentrationDrugs
 	}
 
+	CountCalcInjection, errGetCountCalcInjection := s.repo.GetCountCalcProcessInjection(ctx, owner)
+
+	if errGetCountCalcInjection != nil {
+		return Points{}, errGetCountCalcInjection
+	}
+
+	result.CountProcess = CountCalcInjection
+
 	for _, itemConcentrationDrugs := range ConcentrationDrugs {
 		result.Drugs = append(result.Drugs, itemConcentrationDrugs.Drug)
 	}

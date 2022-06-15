@@ -28,6 +28,7 @@ type Repository interface {
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 	GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
+	GetCountCalcProcessInjection(ctx context.Context, owner string) (int, error)
 	GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 	UpdateInjection(ctx context.Context, injection entity.Injection) error
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
@@ -162,6 +163,14 @@ func (r repository) GetConcentrationDrugs(ctx context.Context, owner string, sd 
 	err := r.db.With(ctx).NewQuery("select distinct drug " +
 		"from concentration where owner = {:owner} and dt >= {:sd} and dt <= {:ed} and id_injection in (select id from injection where owner = {:owner})").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000}).All(&concentrationDrugs)
 	return concentrationDrugs, err
+}
+
+func (r repository) GetCountCalcProcessInjection(ctx context.Context, owner string) (int, error) {
+	var count int
+	//err := r.db.With(ctx).Select("drug").Where(dbx.HashExp{"owner": owner}).Distinct(true).All(&concentrationDrugs)
+	err := r.db.With(ctx).NewQuery("select count(1) as count from injection where owner = {:owner} " +
+		"and calc=false and delete = false").Bind(dbx.Params{"owner": owner}).Row(&count)
+	return count, err
 }
 
 func (r repository) GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error) {
