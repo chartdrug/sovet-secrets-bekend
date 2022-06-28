@@ -57,6 +57,11 @@ func (s service) Delete(ctx context.Context, id string) (entity.Course, error) {
 	if err = s.repo.Delete(ctx, id); err != nil {
 		return entity.Course{}, err
 	}
+	//отвязываем всю фарму от этого укола
+	if err = s.repo.UntieCourse(ctx, id); err != nil {
+		return entity.Course{}, err
+	}
+
 	return course, nil
 }
 
@@ -99,12 +104,24 @@ func (s service) Create(ctx context.Context, req entity.Course, owner string) (e
 			utils.SendMailError("Course Create1 ", e.Id+" - "+err.Error())
 			return entity.Course{}, err
 		}
+		//отвязываем всю фарму от этого укола
+		logger.Info("UntieCourse:" + e.Id)
+		if err = s.repo.UntieCourse(ctx, e.Id); err != nil {
+			return entity.Course{}, err
+		}
 	} else {
 		err := s.repo.Create(ctx, e)
 		if err != nil {
 			utils.SendMailError("Course Create2", e.Id+" - "+err.Error())
 			return entity.Course{}, err
 		}
+	}
+
+	//всю фарму нужно привязать к новому курсу
+	err := s.repo.СontactCourse(ctx, e.Id, e.Owner, e.Course_start, e.Course_end)
+	if err != nil {
+		utils.SendMailError("СontactCourse", e.Id+" - "+err.Error())
+		return entity.Course{}, err
 	}
 
 	return s.GetOne(ctx, e.Id)

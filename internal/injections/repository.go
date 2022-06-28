@@ -16,8 +16,10 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id string) ([]entity.Injection, error)
 	GetByDate(ctx context.Context, id string, sd time.Time, ed time.Time) ([]entity.Injection, error)
+	GetInjectionByCourse(ctx context.Context, owner string, id string) ([]entity.Injection, error)
 	GetDose(ctx context.Context, id string) ([]entity.Injection_Dose, error)
 	GetAllDose(ctx context.Context, owner string) ([]entity.Injection_Dose, error)
+	GetAllDoseCourse(ctx context.Context, owner string, id string) ([]entity.Injection_Dose, error)
 	GetOne(ctx context.Context, id string) (entity.Injection, error)
 	Delete(ctx context.Context, id string) error
 	GetOneDose(ctx context.Context, id string) (entity.Injection_Dose, error)
@@ -28,12 +30,15 @@ type Repository interface {
 	CreateInjection(ctx context.Context, injection entity.Injection) error
 	CreateInjectionDose(ctx context.Context, injectionDose entity.Injection_Dose) error
 	GetConcentrationDrugs(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
+	GetConcentrationDrugsCourse(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
 	GetCountCalcProcessInjection(ctx context.Context, owner string) (int, error)
 	GetConcentration(ctx context.Context, owner string, drug string, sd time.Time, ed time.Time) ([]entity.Concentration, error)
+	GetConcentration2(ctx context.Context, owner string, id string) ([]entity.Concentration, error)
 	UpdateInjection(ctx context.Context, injection entity.Injection) error
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
 	GetInjectionLimit(ctx context.Context) ([]entity.Injection, error)
 	UpdateInjectionCalc(ctx context.Context, id string) error
+	GetCourse(ctx context.Context, id string) (entity.Course, error)
 }
 
 type repository struct {
@@ -59,6 +64,12 @@ func (r repository) GetByDate(ctx context.Context, owner string, sd time.Time, e
 	return injection, err
 }
 
+func (r repository) GetInjectionByCourse(ctx context.Context, owner string, id string) ([]entity.Injection, error) {
+	var injection []entity.Injection
+	err := r.db.With(ctx).NewQuery("select * from injection where owner = {:owner} and (id = {:id} or course = {:id}) order by dt desc").Bind(dbx.Params{"owner": owner, "id": id}).All(&injection)
+	return injection, err
+}
+
 func (r repository) GetDose(ctx context.Context, id_injection string) ([]entity.Injection_Dose, error) {
 	var injection_dose []entity.Injection_Dose
 	err := r.db.With(ctx).Select().Where(dbx.HashExp{"id_injection": id_injection}).All(&injection_dose)
@@ -80,6 +91,12 @@ func (r repository) GetOneDose(ctx context.Context, id string) (entity.Injection
 func (r repository) GetAllDose(ctx context.Context, owner string) ([]entity.Injection_Dose, error) {
 	var injectionDose []entity.Injection_Dose
 	err := r.db.With(ctx).NewQuery("select *  from injection_dose where id_injection in (select id from injection where owner = {:owner})").Bind(dbx.Params{"owner": owner}).All(&injectionDose)
+	return injectionDose, err
+}
+
+func (r repository) GetAllDoseCourse(ctx context.Context, owner string, id string) ([]entity.Injection_Dose, error) {
+	var injectionDose []entity.Injection_Dose
+	err := r.db.With(ctx).NewQuery("select *  from injection_dose where id_injection in (select id from injection where owner = {:owner} and (id = {:id} or course = {:id}))").Bind(dbx.Params{"owner": owner, "id": id}).All(&injectionDose)
 	return injectionDose, err
 }
 
@@ -165,6 +182,13 @@ func (r repository) GetConcentrationDrugs(ctx context.Context, owner string, sd 
 	return concentrationDrugs, err
 }
 
+func (r repository) GetConcentrationDrugsCourse(ctx context.Context, owner string, sd time.Time, ed time.Time) ([]entity.Concentration, error) {
+	var concentrationDrugs []entity.Concentration
+	err := r.db.With(ctx).NewQuery("select distinct drug " +
+		"from concentration where owner = {:owner} and id_injection in (select id from injection where owner = {:owner} and dt >= {:sd} and dt <= {:ed})").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000}).All(&concentrationDrugs)
+	return concentrationDrugs, err
+}
+
 func (r repository) GetCountCalcProcessInjection(ctx context.Context, owner string) (int, error) {
 	var count int
 	//err := r.db.With(ctx).Select("drug").Where(dbx.HashExp{"owner": owner}).Distinct(true).All(&concentrationDrugs)
@@ -183,6 +207,17 @@ func (r repository) GetConcentration(ctx context.Context, owner string, drug str
 		"and id_injection in (select id from injection where owner = {:owner}) " +
 		"group by 1,2,3) a " +
 		"group by 1,2 order by 2").Bind(dbx.Params{"owner": owner, "sd": sd.Unix() * 1000, "ed": ed.Unix() * 1000})
+	err := q.All(&concentration)
+	return concentration, err
+}
+
+func (r repository) GetConcentration2(ctx context.Context, owner string, id string) ([]entity.Concentration, error) {
+	var concentration []entity.Concentration
+	q := r.db.With(ctx).NewQuery("select drug, dt, sum(CCT) as CCT from(select drug, a.id_injection, CAST (round(dt/(1000*60*15))*(1000*60*15) AS BIGINT) as dt, max(CCT) as CCT " +
+		"from concentration a where owner = {:owner} " +
+		"and id_injection in (select id from injection where owner = {:owner} and (id = {:id} or course = {:id})) " +
+		"group by 1,2,3) a " +
+		"group by 1,2 order by 2").Bind(dbx.Params{"owner": owner, "id": id})
 	err := q.All(&concentration)
 	return concentration, err
 }
@@ -233,4 +268,10 @@ func (r repository) GetInjectionLimit(ctx context.Context) ([]entity.Injection, 
 func (r repository) UpdateInjectionCalc(ctx context.Context, id string) error {
 	_, err := r.db.With(ctx).Update("injection", dbx.Params{"calc": "true"}, dbx.HashExp{"id": id}).Execute()
 	return err
+}
+
+func (r repository) GetCourse(ctx context.Context, id string) (entity.Course, error) {
+	var course entity.Course
+	err := r.db.With(ctx).Select().Model(id, &course)
+	return course, err
 }

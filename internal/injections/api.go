@@ -29,6 +29,7 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	//r.Get("/api/injections/", res.getAllDose)
 	//r.Get("/api/injections/report", res.getReort)
 	r.Get("/api/injections/report/<sDate>/<fDate>/", res.getReort)
+	r.Get("/api/injections/course/report/<id>", res.getReort2)
 	r.Get("/api/injections/inj/<id>", res.getinj)
 	//r.Delete("/api/antros/<id>", res.delete)
 	r.Post("/api/injection", res.create)
@@ -138,6 +139,173 @@ func (r resource) getinj(c *routing.Context) error {
 
 }
 
+func (r resource) getinjRep(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		injection, err := r.service.Getinj(c.Request.Context(), c.Param("id"), claims["id"].(string), false)
+		if err != nil {
+			return err
+		}
+
+		//оставляем только каждые 15 минут
+		for i := len(injection.Points) - 1; i >= 0; i-- {
+			if i%15 != 0 {
+				injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
+			}
+		}
+		//получаем обём крови
+		antro, errAntro := r.service.GetForBloodVolume(c.Request.Context(), claims["id"].(string))
+		if errAntro != nil {
+			return errAntro
+		}
+
+		var BloodVolume = utils.GetBloodVolume(claims["sex"].(string), antro)
+
+		//кол-во доступных вариантов крови
+		var b = 0
+		var lb = len(BloodVolume)
+
+		if lb == 0 {
+			return errors.NotFound("Вам нужно заполнить информацию по aнтропометрии")
+		}
+
+		//удаляем всё что меньше 0.2 и делаем округелние
+		for i := len(injection.Points) - 1; i >= 0; i-- {
+			//fmt.Println("test2")
+			application := injection.Points[i]
+			// Condition to decide if current element has to be deleted:
+			if application.PointValues[0].CCT < 0.2 {
+				//fmt.Println("server %v\n", application.PointValues[0].CCT)
+				injection.Points = append(injection.Points[:i],
+					injection.Points[i+1:]...)
+			} else {
+				// если расчёт крови боль даты инькции и есть ещё древние то смещаемся пока не найдём
+				if BloodVolume[b].Dt > application.Dt && b != lb-1 {
+					fmt.Println("----")
+					for y := b; y < lb; y++ {
+						if BloodVolume[y].Dt <= application.Dt {
+							b = y
+							break
+						}
+					}
+				}
+				for y := 0; y < len(application.PointValues); y++ {
+					//application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
+					application.PointValues[y].CCT = math.Round((((application.PointValues[y].CCT/288431)*1000000000)/BloodVolume[b].V)*1000) / 1000
+				}
+
+			}
+		}
+
+		return c.Write(injection)
+	} else {
+		return err
+	}
+
+}
+
+func (r resource) getReort2(c *routing.Context) error {
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		injection, err := r.service.GetinjReort2(c.Request.Context(), claims["id"].(string), c.Param("id"))
+		if err != nil {
+			return err
+		}
+
+		//получаем обём крови
+		antro, errAntro := r.service.GetForBloodVolume(c.Request.Context(), claims["id"].(string))
+		if errAntro != nil {
+			return errAntro
+		}
+
+		var BloodVolume = utils.GetBloodVolume(claims["sex"].(string), antro)
+
+		//кол-во доступных вариантов крови
+		var b = 0
+		var lb = len(BloodVolume)
+
+		if lb == 0 {
+			return errors.NotFound("Вам нужно заполнить информацию по aнтропометрии")
+		}
+
+		//Расчет даты начала ПКТ (посткурсовая терапия)
+		//Надо найти дату > последнего применения в которой общая
+		//концентрация снижается до 10 нмоль. (если юзер использовал препараты так что не
+		//поднимался выше 10 нмоль за весь курс (что весьма маловероятно, ибо теряется всякий
+		//смысл использования анаболиков), то такая дата найдена быть не может и в этом случае
+		//надо определить дату начала ПКТ как дата последнего применения + 7 дней.
+
+		for _, item := range injection.Injections {
+			if item.Injection.Dt.IsZero() ||
+				item.Injection.Dt.After(injection.Pkt) {
+				injection.Pkt = item.Injection.Dt
+			}
+		}
+
+		first := true
+		lastpkt := true
+		lastcontrol := true
+
+		for i := len(injection.Points) - 1; i >= 0; i-- {
+
+			//fmt.Println("test2")
+			application := injection.Points[i]
+			//PKT
+			if math.Round((((application.PointValues[0].CCT/288431)*1000000000)/BloodVolume[b].V)*1000)/1000 <= 10 && lastpkt {
+				injection.Pkt = time.Unix(application.Dt/1000, 0)
+			} else {
+				lastpkt = false
+			}
+			if math.Round((((application.PointValues[0].CCT/288431)*1000000000)/BloodVolume[b].V)*1000)/1000 <= 0.000001 && lastcontrol {
+				injection.Control = time.Unix(application.Dt/1000, 0)
+			} else {
+				lastcontrol = false
+			}
+			//fmt.Println(application.PointValues[0].CCT )
+			// Condition to decide if current element has to be deleted:
+			//if application.PointValues[1].CCT < 1 && first {
+			if math.Round((((application.PointValues[0].CCT/288431)*1000000000)/BloodVolume[b].V)*1000)/1000 < 0.2 && first {
+				//fmt.Println("server %v\n", application.PointValues[0].CCT)
+				injection.Points = append(injection.Points[:i],
+					injection.Points[i+1:]...)
+			} else {
+				first = false
+				for y := 0; y < len(application.PointValues); y++ {
+					//application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
+					application.PointValues[y].CCT = math.Round((((application.PointValues[y].CCT/288431)*1000000000)/BloodVolume[b].V)*1000) / 1000
+				}
+			}
+		}
+
+		if !injection.Pkt.IsZero() {
+			injection.Pkt = injection.Pkt.AddDate(0, 0, 7)
+		}
+
+		if !injection.Control.IsZero() {
+			injection.Control = injection.Control.AddDate(0, 0, 7)
+		}
+
+		return c.Write(injection)
+	} else {
+		return err
+	}
+}
+
 func (r resource) getReort(c *routing.Context) error {
 
 	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
@@ -219,6 +387,17 @@ func (r resource) create(c *routing.Context) error {
 		var summ = 0.0
 		for _, item := range input.Injection_Dose {
 			summ += item.Volume
+		}
+
+		Course, errCourse := r.service.GetCourse(c.Request.Context(), input.Injection.Course)
+		if err != nil {
+			return errCourse
+		}
+
+		//округляем дату
+		d := 24 * time.Hour
+		if input.Injection.Dt.Before(Course.Course_start) || input.Injection.Dt.Truncate(d).After(Course.Course_end) {
+			return errors.BadRequest("Применение фармакологии должно быть в период курса")
 		}
 
 		if summ > 10 {
@@ -310,6 +489,20 @@ func (r resource) create2(c *routing.Context) error {
 
 		//var arrayUid []string
 
+		//проверка что даты входя в период курса
+
+		Course, errCourse := r.service.GetCourse(c.Request.Context(), input.Injection.Course)
+		if err != nil {
+			return errCourse
+		}
+
+		for _, d := range input.Injection.Date {
+			dt, _ := time.Parse("2006-01-02", d)
+			if dt.Before(Course.Course_start) || dt.After(Course.Course_end) {
+				return errors.BadRequest("Применение фармакологии должно быть в период курса")
+			}
+		}
+
 		for _, d := range input.Injection.Date {
 			for _, t := range input.Injection.Times {
 				inj := CreateInjectionsRequest{}
@@ -322,6 +515,7 @@ func (r resource) create2(c *routing.Context) error {
 				fmt.Println(inj.Injection.Dt)
 
 				inj.Injection.What = input.Injection.What
+				inj.Injection.Course = input.Injection.Course
 
 				err := r.service.Create(c.Request.Context(), inj, claims["id"].(string))
 				if err != nil {

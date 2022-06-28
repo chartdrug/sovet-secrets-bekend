@@ -20,6 +20,7 @@ type Service interface {
 	GetinjArray(ctx context.Context, id []string, owner string, save bool) error
 	GetinjOne(ctx context.Context, id string) (InjectionModel, error)
 	GetinjReort(ctx context.Context, owner string, sDate string, fDate string) (Points, error)
+	GetinjReort2(ctx context.Context, owner string, id string) (Points, error)
 	Delete(ctx context.Context, id string, owner string) (InjectionModel, error)
 	DeleteDose(ctx context.Context, id string, idDose string, owner string) (InjectionModel, error)
 	//Create(ctx context.Context, input CreateInjectionsRequest, owner string) (InjectionModel, error)
@@ -27,6 +28,7 @@ type Service interface {
 	GetForBloodVolume(ctx context.Context, owner string) ([]entity.Antro, error)
 	AsyncCall(ctx context.Context) error
 	AsyncCallID(ctx context.Context, id string) error
+	GetCourse(ctx context.Context, id string) (entity.Course, error)
 }
 
 // Album represents the data about an album.
@@ -110,6 +112,110 @@ func (s service) GetAllDose(ctx context.Context, owner string, sDate string, fDa
 			}
 		}
 		result = append(result, resultModel)
+	}
+	return result, nil
+}
+
+func (s service) GetCourseReport(ctx context.Context, owner string, sDate string, fDate string) (Points, error) {
+	result := Points{}
+
+	date1, err := time.Parse("2006-01-02", sDate)
+	//fmt.Println(date1)
+	if err != nil {
+		return Points{}, err
+	}
+
+	date2, err := time.Parse("2006-01-02", fDate)
+	if err != nil {
+		return Points{}, err
+	}
+	// добавляем + 1 день
+	date2 = date2.AddDate(0, 0, 1)
+
+	ConcentrationDrugs, errConcentrationDrugs := s.repo.GetConcentrationDrugsCourse(ctx, owner, date1, date2)
+
+	if errConcentrationDrugs != nil {
+		return Points{}, errConcentrationDrugs
+	}
+
+	CountCalcInjection, errGetCountCalcInjection := s.repo.GetCountCalcProcessInjection(ctx, owner)
+
+	if errGetCountCalcInjection != nil {
+		return Points{}, errGetCountCalcInjection
+	}
+
+	result.CountProcess = CountCalcInjection
+
+	for _, itemConcentrationDrugs := range ConcentrationDrugs {
+		result.Drugs = append(result.Drugs, itemConcentrationDrugs.Drug)
+	}
+
+	Concentration, errConcentration := s.repo.GetConcentration(ctx, owner, "", date1, date2)
+
+	if errConcentration != nil {
+		return Points{}, errConcentration
+	}
+
+	var preDt int64 = 0
+	var point entity.Point
+
+	for i := 0; i < len(Concentration); i++ {
+
+		if preDt != Concentration[i].Dt {
+			//fmt.Println("preDt != Concentration[i].Dt ")
+			//новая дата или первый раз
+
+			if preDt != 0 {
+				//если не первый раз сюда попали - последний блок всегда теряем ;)
+				//fmt.Println("append(result.Points, point)")
+				if len(point.PointValues) != len(result.Drugs)+1 {
+					//fmt.Println("len(point.PointValues) != len(result.Drugs)")
+
+					for _, Drug := range result.Drugs {
+						var existsDrug = false
+						for _, pV := range point.PointValues {
+							if pV.Drug == Drug {
+								existsDrug = true
+							}
+						}
+						if !existsDrug {
+							//fmt.Println(Drug)
+							pValue := entity.PointValue{}
+
+							pValue.Drug = Drug
+							pValue.CCT = 0
+							point.PointValues = append(point.PointValues, pValue)
+						}
+					}
+				}
+				result.Points = append(result.Points, point)
+			}
+			point = entity.Point{}
+			point.Dt = Concentration[i].Dt
+
+			point.PointValues = append(point.PointValues, entity.PointValue{})
+
+			point.PointValues[0].Drug = "SUMM"
+			point.PointValues[0].CCT = 0
+
+		}
+
+		pValue := entity.PointValue{}
+
+		pValue.Drug = Concentration[i].Drug
+		pValue.CCT = Concentration[i].CCT
+
+		point.PointValues[0].CCT += pValue.CCT
+
+		point.PointValues = append(point.PointValues, pValue)
+
+		preDt = Concentration[i].Dt
+	}
+
+	//подпорка для фронта чтобы не падал когда в отчёте пусто
+	if len(result.Drugs) == 0 {
+		result.Drugs = []string{}
+		result.Points = []entity.Point{}
 	}
 	return result, nil
 }
@@ -250,6 +356,134 @@ func (s service) GetinjReort(ctx context.Context, owner string, sDate string, fD
 		}
 	*/
 	//sort.Sort(result.Points)
+	//подпорка для фронта чтобы не падал когда в отчёте пусто
+	if len(result.Drugs) == 0 {
+		result.Drugs = []string{}
+		result.Points = []entity.Point{}
+	}
+	return result, nil
+}
+
+func (s service) GetinjReort2(ctx context.Context, owner string, id string) (Points, error) {
+	result := Points{}
+
+	items, err := s.repo.GetInjectionByCourse(ctx, owner, id)
+	if err != nil {
+		return Points{}, err
+	}
+	resultTmp := []entity.InjectionModel{}
+
+	itemsAllDose, errAllDose := s.repo.GetAllDoseCourse(ctx, owner, id)
+	if errAllDose != nil {
+		return Points{}, errAllDose
+	}
+
+	result.CountProcess = 0
+
+	for _, item := range items {
+		resultModel := entity.InjectionModel{}
+		resultModel.Injection = item
+		resultModel.Injection_Dose = []entity.Injection_Dose{}
+		if !item.Calc {
+			result.CountProcess++
+		}
+
+		for _, itemDose := range itemsAllDose {
+			//logger.Infof("injection.Injection_Dose " + itemDose.Drug)
+			if itemDose.Id_injection == item.ID {
+				resultModel.Injection_Dose = append(resultModel.Injection_Dose, itemDose)
+			}
+
+		}
+		resultTmp = append(resultTmp, resultModel)
+	}
+
+	result.Injections = resultTmp
+	/*
+		CountCalcInjection, errGetCountCalcInjection := s.repo.GetCountCalcProcessInjection(ctx, owner)
+
+		if errGetCountCalcInjection != nil {
+			return Points{}, errGetCountCalcInjection
+		}
+
+		//result.CountProcess = CountCalcInjection
+	*/
+	// заполняем уникальный список лекарств
+	for _, itemInjection := range result.Injections {
+		for _, itemInjection_Dose := range itemInjection.Injection_Dose {
+			var existsDrug = false
+			for _, itemDrug := range result.Drugs {
+				if itemDrug == itemInjection_Dose.Drug {
+					existsDrug = true
+				}
+			}
+			if !existsDrug {
+				result.Drugs = append(result.Drugs, itemInjection_Dose.Drug)
+			}
+
+		}
+	}
+
+	Concentration, errConcentration := s.repo.GetConcentration2(ctx, owner, id)
+
+	if errConcentration != nil {
+		return Points{}, errConcentration
+	}
+
+	var preDt int64 = 0
+	var point entity.Point
+
+	for i := 0; i < len(Concentration); i++ {
+
+		if preDt != Concentration[i].Dt {
+			//новая дата или первый раз
+
+			if preDt != 0 {
+				//если не первый раз сюда попали - последний блок всегда теряем ;)
+				//fmt.Println("append(result.Points, point)")
+				if len(point.PointValues) != len(result.Drugs)+1 {
+					//fmt.Println("len(point.PointValues) != len(result.Drugs)")
+
+					for _, Drug := range result.Drugs {
+						var existsDrug = false
+						for _, pV := range point.PointValues {
+							if pV.Drug == Drug {
+								existsDrug = true
+							}
+						}
+						if !existsDrug {
+							//fmt.Println(Drug)
+							pValue := entity.PointValue{}
+
+							pValue.Drug = Drug
+							pValue.CCT = 0
+							point.PointValues = append(point.PointValues, pValue)
+						}
+					}
+				}
+				result.Points = append(result.Points, point)
+			}
+			point = entity.Point{}
+			point.Dt = Concentration[i].Dt
+
+			point.PointValues = append(point.PointValues, entity.PointValue{})
+
+			point.PointValues[0].Drug = "SUMM"
+			point.PointValues[0].CCT = 0
+
+		}
+
+		pValue := entity.PointValue{}
+
+		pValue.Drug = Concentration[i].Drug
+		pValue.CCT = Concentration[i].CCT
+
+		point.PointValues[0].CCT += pValue.CCT
+
+		point.PointValues = append(point.PointValues, pValue)
+
+		preDt = Concentration[i].Dt
+	}
 	//подпорка для фронта чтобы не падал когда в отчёте пусто
 	if len(result.Drugs) == 0 {
 		result.Drugs = []string{}
@@ -725,10 +959,11 @@ func (s service) Create(ctx context.Context, req CreateInjectionsRequest, owner 
 	}
 	// создаём сущность самого применения
 	err := s.repo.CreateInjection(ctx, entity.Injection{
-		ID:    id,
-		Owner: owner,
-		Dt:    req.Injection.Dt,
-		What:  req.Injection.What,
+		ID:     id,
+		Owner:  owner,
+		Dt:     req.Injection.Dt,
+		What:   req.Injection.What,
+		Course: req.Injection.Course,
 	})
 	if err != nil {
 		utils.SendMailError("s.repo.CreateInjection", err.Error())
@@ -896,4 +1131,12 @@ func (s service) AsyncCallID(ctx context.Context, id string) error {
 	logger.Info("calc end" + id)
 
 	return nil
+}
+
+func (s service) GetCourse(ctx context.Context, id string) (entity.Course, error) {
+	course, err := s.repo.GetCourse(ctx, id)
+	if err != nil {
+		return entity.Course{}, err
+	}
+	return course, nil
 }

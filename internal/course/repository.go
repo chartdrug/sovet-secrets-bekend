@@ -16,6 +16,8 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	Create(ctx context.Context, album entity.Course) error
 	Update(ctx context.Context, album entity.Course) error
+	UntieCourse(ctx context.Context, courseId string) error
+	СontactCourse(ctx context.Context, courseId string, owner string, sd time.Time, ed time.Time) error
 }
 
 type repository struct {
@@ -52,6 +54,18 @@ func (r repository) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return r.db.With(ctx).Model(&course).Delete()
+}
+
+func (r repository) UntieCourse(ctx context.Context, courseId string) error {
+	_, err := r.db.With(ctx).Update("injection", dbx.Params{"course": "369cf9b0-f652-11ec-b939-0242ac120002"}, dbx.HashExp{"course": courseId}).Execute()
+	return err
+}
+
+func (r repository) СontactCourse(ctx context.Context, courseId string, owner string, sd time.Time, ed time.Time) error {
+	_, err := r.db.With(ctx).NewQuery("update injection set course = {:course} where owner = {:owner} and dt >= {:sd} and DATE_TRUNC('day',dt) <= {:ed}").
+		Bind(dbx.Params{"course": courseId, "owner": owner, "sd": sd, "ed": ed}).Execute()
+	return err
+
 }
 
 func (r repository) Create(ctx context.Context, course entity.Course) error {

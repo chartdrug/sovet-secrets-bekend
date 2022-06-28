@@ -14,20 +14,21 @@ type Injection_Dose struct {
 }
 
 type Injection struct {
-	ID    string
-	Owner string    `json:"-"`
-	Dt    time.Time `json:"dt"`
-	//Course  string           `json:"course"`
-	What     string  `json:"what"`
-	TotalV   float64 `json:"-" db:"-"`
-	SkinSumm float64 `json:"-" db:"-"`
-	Skin     float64 `json:"-" db:"-"`
-	Calc     bool    `json:"-"`
+	ID       string
+	Owner    string    `json:"-"`
+	Dt       time.Time `json:"dt"`
+	Course   string    `json:"course"`
+	What     string    `json:"what"`
+	TotalV   float64   `json:"-" db:"-"`
+	SkinSumm float64   `json:"-" db:"-"`
+	Skin     float64   `json:"-" db:"-"`
+	Calc     bool      `json:"calc"`
 }
 
 type Injectionv2 struct {
 	ID       string
 	Owner    string   `json:"-"`
+	Course   string   `json:"course"`
 	Date     []string `json:"date"`
 	Times    []int    `json:"times"`
 	What     string   `json:"what"`
@@ -84,9 +85,12 @@ type Point struct {
 	PointValues []PointValue `json:"pointValues"`
 }
 type PointsArray struct {
-	CountProcess int      `json:"countProcess"`
-	Drugs        []string `json:"drugs"`
-	Points       []Point  `json:"point"`
+	CountProcess int              `json:"countProcess"`
+	Pkt          time.Time        `json:"pkt"`
+	Control      time.Time        `json:"control"`
+	Drugs        []string         `json:"drugs"`
+	Points       []Point          `json:"point"`
+	Injections   []InjectionModel `json:"Injections"`
 }
 
 // GetID returns the user ID.
