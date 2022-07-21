@@ -85,12 +85,14 @@ type Point struct {
 	PointValues []PointValue `json:"pointValues"`
 }
 type PointsArray struct {
-	CountProcess int              `json:"countProcess"`
-	Pkt          time.Time        `json:"pkt"`
-	Control      time.Time        `json:"control"`
-	Drugs        []string         `json:"drugs"`
-	Points       []Point          `json:"point"`
-	Injections   []InjectionModel `json:"Injections"`
+	CountProcess    int              `json:"countProcess"`
+	Pkt             time.Time        `json:"pkt"`
+	Control         time.Time        `json:"control"`
+	AnabolicIndex   float64          `json:"anabolicIndex"`
+	AndrogenicIndex float64          `json:"androgenicIndex"`
+	Drugs           []string         `json:"drugs"`
+	Points          []Point          `json:"point"`
+	Injections      []InjectionModel `json:"Injections"`
 }
 
 // GetID returns the user ID.

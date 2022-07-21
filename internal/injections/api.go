@@ -238,6 +238,7 @@ func (r resource) getReort2(c *routing.Context) error {
 		//кол-во доступных вариантов крови
 		var b = 0
 		var lb = len(BloodVolume)
+		var countDaysAndro = 0.0
 
 		if lb == 0 {
 			return errors.NotFound("Вам нужно заполнить информацию по aнтропометрии")
@@ -257,9 +258,36 @@ func (r resource) getReort2(c *routing.Context) error {
 			}
 		}
 
+		if !injection.Pkt.IsZero() {
+			injection.Pkt = injection.Pkt.AddDate(0, 0, 7)
+		}
+
+		//Анаболический индекс
+		/*
+			Это отношение площади фигуры общего графика выше 30нмоль к площади
+			прямоугольника ниже 30 нмоль. (отношение красной площади к черной).
+			Считать видимо так: каждую единицу времени (каждый шаг цикла расчета
+			концентрации) делить общую концентрацию на 30 (если концентрация <30, то
+			присвоить результату деления значение 0). Сумма этих частных за курс и будет
+			анаболическим индексом курса. Для красоты умножить на 100 и округлить до целого
+			(либо откинуть дробную часть).
+		*/
+		injection.AnabolicIndex = 0.0
+		//Андрогенный индекс
+		/*
+			Это отношение средней концентрации (считается также по общей) к 30.
+			Среднее значение вычисляется из ранее полученных частных. Для красоты умножить
+			на 100 и округлить до целого (либо откинуть дробную часть).
+		*/
+		injection.AndrogenicIndex = 0.0
+		cAndrogenicIndex := 1.0
+
 		first := true
 		lastpkt := true
-		lastcontrol := true
+
+		if (len(injection.Points) - 1) > 0 {
+			injection.Control = time.Unix(injection.Points[len(injection.Points)-1].Dt/1000, 0)
+		}
 
 		for i := len(injection.Points) - 1; i >= 0; i-- {
 
@@ -271,34 +299,38 @@ func (r resource) getReort2(c *routing.Context) error {
 			} else {
 				lastpkt = false
 			}
-			if math.Round((((application.PointValues[0].CCT/288431)*1000000000)/BloodVolume[b].V)*1000)/1000 <= 0.000001 && lastcontrol {
-				injection.Control = time.Unix(application.Dt/1000, 0)
-			} else {
-				lastcontrol = false
+			//injection.AnabolicIndex
+			if ((application.PointValues[0].CCT/288431)*1000000000)/BloodVolume[b].V >= 30.0 {
+				injection.AnabolicIndex = injection.AnabolicIndex + (((application.PointValues[0].CCT / 288431) * 1000000000) / BloodVolume[b].V / 30.0)
+				//injection.AndrogenicIndex
+				//считаем от даты ПКТ
+				if !lastpkt {
+					injection.AndrogenicIndex = injection.AndrogenicIndex + (((application.PointValues[0].CCT / 288431) * 1000000000) / BloodVolume[b].V / 30.0)
+					cAndrogenicIndex = cAndrogenicIndex + 1.0
+				}
 			}
-			//fmt.Println(application.PointValues[0].CCT )
-			// Condition to decide if current element has to be deleted:
-			//if application.PointValues[1].CCT < 1 && first {
+
 			if math.Round((((application.PointValues[0].CCT/288431)*1000000000)/BloodVolume[b].V)*1000)/1000 < 0.2 && first {
-				//fmt.Println("server %v\n", application.PointValues[0].CCT)
 				injection.Points = append(injection.Points[:i],
 					injection.Points[i+1:]...)
 			} else {
 				first = false
 				for y := 0; y < len(application.PointValues); y++ {
-					//application.PointValues[y].CCT = math.Round(application.PointValues[y].CCT*1000) / 1000
 					application.PointValues[y].CCT = math.Round((((application.PointValues[y].CCT/288431)*1000000000)/BloodVolume[b].V)*1000) / 1000
 				}
 			}
 		}
 
-		if !injection.Pkt.IsZero() {
-			injection.Pkt = injection.Pkt.AddDate(0, 0, 7)
-		}
-
 		if !injection.Control.IsZero() {
 			injection.Control = injection.Control.AddDate(0, 0, 7)
 		}
+
+		if len(injection.Points) > 0 {
+			countDaysAndro = injection.Pkt.Sub(time.Unix(injection.Points[0].Dt/1000, 0)).Hours() / 24
+		}
+		//андрогенный множить количество дней курса( от первого дня до дня ПКТ)
+		injection.AnabolicIndex = math.Round(injection.AnabolicIndex*100) / 100
+		injection.AndrogenicIndex = math.Round((injection.AndrogenicIndex/cAndrogenicIndex)*countDaysAndro*100) / 100
 
 		return c.Write(injection)
 	} else {
