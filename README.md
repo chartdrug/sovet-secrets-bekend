@@ -306,10 +306,22 @@ cd /etc/httpd/conf.d
 sudo nano yourDomainName.conf
 
 https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-centos-7
+
 перевыпуск серта 
+sudo certbot --nginx -d chartdrug.com -d www.chartdrug.com
+udo cp /etc/letsencrypt/live/chartdrug.com/fullchain.pem /etc/nginx/fullchain.pem
+sudo cp /etc/letsencrypt/live/chartdrug.com/privkey.pem /etc/nginx/privkey.pem
+sudo systemctl stop nginx
+sudo systemctl start nginx
+
+
+
+
 sudo systemctl stop nginx
 sudo systemctl start httpd.service
 sudo certbot --apache -d chartdrug.com -d www.chartdrug.com -d www.calcpharm.com -d calcpharm.com
+//sudo certbot certonly --manual -d chartdrug.com -d www.chartdrug.com -d www.calcpharm.com -d calcpharm.com
+certbot --nginx -d chartdrug.com -d www.chartdrug.com
 sudo systemctl stop httpd.service && sudo systemctl start nginx
 
 серты тут
