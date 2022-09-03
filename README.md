@@ -333,7 +333,7 @@ Your key file has been saved at:
 docker exec -it server bash
 docker exec -it centos_server_1 bash
 
-tail -n 50000 /var/log/app/server.log 
+tail -n 50000 /home/centos/logs/server.log
 
 sudo cd /var/log/nginx
 

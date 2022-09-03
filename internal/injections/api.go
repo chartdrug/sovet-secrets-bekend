@@ -25,8 +25,8 @@ func RegisterHandlers(r *routing.RouteGroup, service Service, authHandler routin
 	r.Use(authHandler)
 
 	// the following endpoints require a valid JWT
-	r.Get("/api/injections/<sDate>/<fDate>/", res.getAllDose)
-	//r.Get("/api/injections/", res.getAllDose)
+	r.Get("/api/injections/<sDate>/<fDate>/", res.getDoseByDate)
+	r.Get("/api/injections", res.GetDoseAll)
 	//r.Get("/api/injections/report", res.getReort)
 	r.Get("/api/injections/report/<sDate>/<fDate>/", res.getReort)
 	r.Get("/api/injections/course/report/<id>", res.getReort2)
@@ -44,7 +44,7 @@ type resource struct {
 	logger  log.Logger
 }
 
-func (r resource) getAllDose(c *routing.Context) error {
+func (r resource) getDoseByDate(c *routing.Context) error {
 
 	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
 
@@ -55,7 +55,29 @@ func (r resource) getAllDose(c *routing.Context) error {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		injection, err := r.service.GetAllDose(c.Request.Context(), claims["id"].(string), c.Param("sDate"), c.Param("fDate"))
+		injection, err := r.service.GetDoseByDate(c.Request.Context(), claims["id"].(string), c.Param("sDate"), c.Param("fDate"))
+		if err != nil {
+			return err
+		}
+
+		return c.Write(injection)
+	} else {
+		return err
+	}
+
+}
+func (r resource) GetDoseAll(c *routing.Context) error {
+
+	reqToken := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")[1]
+
+	token, _, err := new(jwt.Parser).ParseUnverified(reqToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		injection, err := r.service.GetDoseAll(c.Request.Context(), claims["id"].(string))
 		if err != nil {
 			return err
 		}

@@ -15,7 +15,8 @@ import (
 
 // Service encapsulates usecase logic for albums.
 type Service interface {
-	GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error)
+	GetDoseByDate(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error)
+	GetDoseAll(ctx context.Context, owner string) ([]InjectionModel, error)
 	Getinj(ctx context.Context, id string, owner string, save bool) (Points, error)
 	GetinjArray(ctx context.Context, id []string, owner string, save bool) error
 	GetinjOne(ctx context.Context, id string) (InjectionModel, error)
@@ -71,8 +72,7 @@ func NewService(repo Repository, logger log.Logger) Service {
 	return service{repo, logger}
 }
 
-// Get returns the album with the specified the album ID.
-func (s service) GetAllDose(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error) {
+func (s service) GetDoseByDate(ctx context.Context, owner string, sDate string, fDate string) ([]InjectionModel, error) {
 	//logger := s.logger.With(ctx, "owner", owner)
 
 	date1, err := time.Parse("2006-01-02", sDate)
@@ -90,6 +90,36 @@ func (s service) GetAllDose(ctx context.Context, owner string, sDate string, fDa
 	//fmt.Println(date2)
 
 	items, err := s.repo.GetByDate(ctx, owner, date1, date2)
+	if err != nil {
+		return nil, err
+	}
+	result := []InjectionModel{}
+
+	itemsAllDose, errAllDose := s.repo.GetAllDose(ctx, owner)
+	if errAllDose != nil {
+		return nil, errAllDose
+	}
+
+	for _, item := range items {
+		resultModel := InjectionModel{}
+		resultModel.Injection = item
+		resultModel.Injection_Dose = []entity.Injection_Dose{}
+
+		for _, itemDose := range itemsAllDose {
+			//logger.Infof("injection.Injection_Dose " + itemDose.Drug)
+			if itemDose.Id_injection == item.ID {
+				resultModel.Injection_Dose = append(resultModel.Injection_Dose, itemDose)
+			}
+		}
+		result = append(result, resultModel)
+	}
+	return result, nil
+}
+
+func (s service) GetDoseAll(ctx context.Context, owner string) ([]InjectionModel, error) {
+	//logger := s.logger.With(ctx, "owner", owner)
+
+	items, err := s.repo.GetAll(ctx, owner)
 	if err != nil {
 		return nil, err
 	}
