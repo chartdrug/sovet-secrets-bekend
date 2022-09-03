@@ -83,11 +83,12 @@ func (r resource) getinj(c *routing.Context) error {
 		}
 
 		//оставляем только каждые 15 минут
-		for i := len(injection.Points) - 1; i >= 0; i-- {
-			if i%15 != 0 {
-				injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
-			}
-		}
+		//убераю тк в бд храним по часу
+		//for i := len(injection.Points) - 1; i >= 0; i-- {
+		//	if i%15 != 0 {
+		//		injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
+		//	}
+		//}
 		//получаем обём крови
 		antro, errAntro := r.service.GetForBloodVolume(c.Request.Context(), claims["id"].(string))
 		if errAntro != nil {
@@ -156,11 +157,12 @@ func (r resource) getinjRep(c *routing.Context) error {
 		}
 
 		//оставляем только каждые 15 минут
-		for i := len(injection.Points) - 1; i >= 0; i-- {
-			if i%15 != 0 {
-				injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
-			}
-		}
+		//убераю тк в бд храним по часу
+		//for i := len(injection.Points) - 1; i >= 0; i-- {
+		//	if i%15 != 0 {
+		//		injection.Points = append(injection.Points[:i], injection.Points[i+1:]...)
+		//	}
+		//}
 		//получаем обём крови
 		antro, errAntro := r.service.GetForBloodVolume(c.Request.Context(), claims["id"].(string))
 		if errAntro != nil {

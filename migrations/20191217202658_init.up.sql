@@ -256,3 +256,14 @@ CREATE TABLE course (
 CREATE INDEX idx_course ON course(owner);
 
 alter table injection ADD COLUMN delete boolean default false;
+
+CREATE INDEX idx_antro_owner ON antro(owner);
+CREATE INDEX idx_antro_id ON antro(id);
+
+CREATE INDEX idx_concentration_id_injection ON concentration(id_injection);
+
+CREATE INDEX idx_course_owner ON course(owner);
+
+CREATE INDEX idx_injection_id ON injection(id);
+
+CREATE INDEX idx_injection_dose_id_injection ON injection_dose(id_injection);

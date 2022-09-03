@@ -876,7 +876,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 		var arryaConcentration []entity.Concentration
 		for _, Drug := range result.Drugs {
 			logger.Infof("save injection Drugs = " + Drug + ", result.Points=" + fmt.Sprintf(":%v", len(result.Points)))
-			var count = 15
+			var count = 60
 			arryaConcentration = []entity.Concentration{}
 
 			for _, itemPoint := range result.Points {
@@ -885,7 +885,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 
 					if itemPoints.Drug == Drug {
 						//каждый 15й элемент
-						if count%15 == 0 {
+						if count%60 == 0 {
 							arryaConcentration = append(arryaConcentration, entity.Concentration{
 								Owner:        owner,
 								Id_injection: id,
