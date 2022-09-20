@@ -558,6 +558,52 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 		result.Drugs = append(result.Drugs, item.Drug)
 	}
 
+	//:TODO нужно сделать расчёт средней скорости растворения
+	//препарат 1 - объем 2мл масло
+	//препарат 2 - объем 4мл олеат
+	//препарат 3 - объем 1мл вода
+	//значит средняя скорость=(2*скорость масла+4*скорость олеата+1*скорость воды)/(2+4+1)
+	//utils.SkinStep(item.Solvent + injection.Injection.What)
+	skinA := 0.0
+	skinB := 0.0
+	for _, item := range injection.Injection_Dose {
+		//println(item.Solvent + injection.Injection.What)
+		//println(utils.SkinStep(item.Solvent + injection.Injection.What))
+		skinA = skinA + (item.Volume * utils.SkinStep(item.Solvent+injection.Injection.What))
+		skinB = skinB + item.Volume
+	}
+	calckSkinStep := skinA / skinB
+	//println("calckSkinStep")
+	//println(calckSkinStep)
+
+	//нужно сделать сложение всех одинаковых препаратов
+	var sumVolume = 0.0
+	var newDose []entity.Injection_Dose
+	for _, item := range injection.Injection_Dose {
+		//собираем сумму объёмов
+		sumVolume = sumVolume + item.Volume
+
+		// проверяем есть ли уже такой препарат
+		exists := false
+		//for _,  d := range newDose {
+		for d := 0; d < len(newDose); d++ {
+			if newDose[d].Drug == item.Drug {
+				exists = true
+				newDose[d].Volume = newDose[d].Volume + item.Volume
+				newDose[d].Dose = newDose[d].Dose + item.Dose
+			}
+		}
+		//если встречается первый раз то создаём
+		if !exists {
+			newDose = append(newDose, item)
+		}
+	}
+	for d := 0; d < len(newDose); d++ {
+		newDose[d].Volume = sumVolume
+	}
+	//подменяем новм объектом
+	injection.Injection_Dose = newDose
+
 	//TODO формула
 	if injection.Injection.What == "W" {
 		//табл
@@ -789,7 +835,8 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 					//this.R[idx]=Math.pow((3*inj.volume[idx])/(4*Math.PI),1/3);
 					pValue.R = math.Pow((3.0*pValue.Volume)/(4.0*math.Pi), 1.0/3.0)
 
-					var skin = utils.SkinStep(item.Solvent + injection.Injection.What)
+					//var skin = utils.SkinStep(item.Solvent + injection.Injection.What)
+					var skin = calckSkinStep
 
 					//logger.Infof("SkinStep=" + fmt.Sprintf("%f", skin))
 

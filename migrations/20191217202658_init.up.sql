@@ -267,3 +267,13 @@ CREATE INDEX idx_course_owner ON course(owner);
 CREATE INDEX idx_injection_id ON injection(id);
 
 CREATE INDEX idx_injection_dose_id_injection ON injection_dose(id_injection);
+
+
+--select * from injection where calc = false
+--update injection set calc = false
+
+--select count(1) from injection where calc = false
+
+--select * from concentration limit 10
+
+--delete from concentration

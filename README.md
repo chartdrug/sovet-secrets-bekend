@@ -261,8 +261,8 @@ docker stop server && docker rm server && docker run -it -d --restart unless-sto
  docker network create chart
 
 ssh -i vk_amster.pem centos@89.208.219.91
-docker stop centos_server_1
-docker rm centos_server_1
+docker stop centos_server_1 && docker rm centos_server_1 && docker-compose -f server-compose.yml up -d
+
 rm /home/centos/logs/server.log
 docker-compose -f server-compose.yml up -d
 
@@ -324,7 +324,7 @@ sudo certbot --apache -d chartdrug.com -d www.chartdrug.com -d www.calcpharm.com
 certbot --nginx -d chartdrug.com -d www.chartdrug.com
 sudo systemctl stop httpd.service && sudo systemctl start nginx
 
-серты тут
+серты тут 12/09/2022
 /etc/letsencrypt/live/chartdrug.com/fullchain.pem
 Your key file has been saved at:
 /etc/letsencrypt/live/chartdrug.com/privkey.pem
@@ -333,7 +333,7 @@ Your key file has been saved at:
 docker exec -it server bash
 docker exec -it centos_server_1 bash
 
-tail -n 50000 /home/centos/logs/server.log
+tail -n 10 /home/centos/logs/server.log
 
 sudo cd /var/log/nginx
 
@@ -388,7 +388,7 @@ https://developer.confluent.io/quickstart/kafka-docker/
 scp -i vk_amster.pem config/kafka-compose.yml centos@89.208.219.91:/home/centos/kafka 
 
 docker-compose -f kafka-compose.yml up -d
-docker-compose -f config/kafka-compose.yml up -d
+docker-compose -f kafka/kafka-compose.yml up -d
 
 docker exec broker \
 kafka-topics --bootstrap-server broker:9092 \
