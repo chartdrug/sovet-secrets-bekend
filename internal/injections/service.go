@@ -569,7 +569,7 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 	for _, item := range injection.Injection_Dose {
 		//println(item.Solvent + injection.Injection.What)
 		//println(utils.SkinStep(item.Solvent + injection.Injection.What))
-		skinA = skinA + (item.Volume * utils.SkinStep(item.Solvent+injection.Injection.What))
+		skinA = skinA + (item.Volume * utils.SkinStep(item.Solvent+injection.Injection.What, item.Drug))
 		skinB = skinB + item.Volume
 	}
 	calckSkinStep := skinA / skinB
@@ -837,6 +837,8 @@ func (s service) Getinj(ctx context.Context, id string, owner string, save bool)
 
 					//var skin = utils.SkinStep(item.Solvent + injection.Injection.What)
 					var skin = calckSkinStep
+
+					//if injection.Injection "ffbd9b96-4767-452d-9e86-452fcb4b4cf4"
 
 					//logger.Infof("SkinStep=" + fmt.Sprintf("%f", skin))
 

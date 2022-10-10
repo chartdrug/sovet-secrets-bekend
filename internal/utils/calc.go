@@ -97,6 +97,11 @@ func GetDrugs() map[string]Drug {
 		6, "c30h48o3", 456.711, 288.431, 63.1539418589191, 100, 30096,
 	}
 
+	d["ffbd9b96-4767-452d-9e86-452fcb4b4cf4"] = Drug{
+		"ffbd9b96-4767-452d-9e86-452fcb4b4cf4", "небидо", "testosterone undecanoate", "testosterone",
+		6, "c30h48o3", 456.711, 288.431, 63.1539418589191, 100, 30096,
+	}
+
 	d["00000012-0003-0000-0000-ff00ff00ff00"] = Drug{
 		"00000012-0003-0000-0000-ff00ff00ff00", "халотестин", "fluoxymesterone", "fluoxymesterone",
 		8, "c20h29fo3", 336.447, 336.447, 100, 85, 420,
@@ -194,8 +199,11 @@ func GetDrugs() map[string]Drug {
 	return d
 }
 
-func SkinStep(s string) float64 {
+func SkinStep(s string, drug string) float64 {
 
+	if drug == "ffbd9b96-4767-452d-9e86-452fcb4b4cf4" {
+		return 0.0004
+	}
 	// ключ - "растворитель - инъекция"
 
 	d := make(map[string]float64)
