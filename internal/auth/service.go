@@ -81,6 +81,19 @@ func (s service) authenticate(ctx context.Context, username, password string, ip
 			return User{}, errH
 		}
 
+		//проверяем есть ли проплаченная лицензия
+		user.Pay = false
+		i, err2 := s.repo.CountPaym(ctx, user.ID)
+
+		if err2 != nil {
+			logger.Error("CountPaym failed username=" + username + ",err=" + err.Error())
+			return User{}, errors.Forbidden("Неверный логин/пароль")
+		}
+
+		if i > 0 {
+			user.Pay = true
+		}
+
 		return User{user}, nil
 	}
 
@@ -97,5 +110,6 @@ func (s service) generateJWT(user User) (string, error) {
 		"admin": user.GetAdmin(),
 		"sex":   user.GetSex(),
 		"email": user.GetEmail(),
+		"pay":   user.GetPay(),
 	}).SignedString([]byte(s.signingKey))
 }

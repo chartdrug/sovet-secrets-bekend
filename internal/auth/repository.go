@@ -14,6 +14,7 @@ type Repository interface {
 	Get(ctx context.Context, login string, password string) (entity.Users, error)
 	UpdateTimeLastLogin(ctx context.Context, id string) error
 	saveHistoryLogin(ctx context.Context, history entity.HistoryLogin) error
+	CountPaym(ctx context.Context, owner string) (int, error)
 }
 
 // repository persists albums in database
@@ -46,4 +47,11 @@ func (r repository) UpdateTimeLastLogin(ctx context.Context, id string) error {
 
 func (r repository) saveHistoryLogin(ctx context.Context, history entity.HistoryLogin) error {
 	return r.db.With(ctx).Model(&history).Insert()
+}
+
+func (r repository) CountPaym(ctx context.Context, owner string) (int, error) {
+	var count int
+	//err := r.db.With(ctx).Select("COUNT(*)").From("cryptocloud").Row(&count)
+	err := r.db.With(ctx).NewQuery("select count(1) from cryptocloud where owner = {:owner} and statusinvoice in ('paid','partial') and dtpaym >= CURRENT_DATE").Bind(dbx.Params{"owner": owner}).Row(&count)
+	return count, err
 }

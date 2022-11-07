@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/payment"
 	"github.com/segmentio/kafka-go"
 	"io/ioutil"
 	"strings"
@@ -195,6 +196,11 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.
 
 	course.RegisterHandlers(rg.Group(""),
 		course.NewService(course.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
+
+	payment.RegisterHandlers(rg.Group(""),
+		payment.NewService(payment.NewRepository(db, logger), logger),
 		authHandler, logger,
 	)
 

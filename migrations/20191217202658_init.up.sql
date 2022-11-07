@@ -277,3 +277,28 @@ CREATE INDEX idx_injection_dose_id_injection ON injection_dose(id_injection);
 --select * from concentration limit 10
 
 --delete from concentration
+
+CREATE TABLE cryptocloud (
+         id          uuid NOT NULL,
+         owner       uuid NOT NULL,
+         dt          timestamp,
+         shopId      character varying(128),
+         amount      double precision,
+         currency    character varying(128),
+         email       character varying(228),
+         invoiceid   character varying(228),
+         status      character varying(128),
+         payurl      character varying(128),
+         reshtpp 	   TEXT,
+         dtpaym      timestamp,
+         statusinvoice character varying(128),
+         resthttpstatus TEXT
+);
+
+CREATE TABLE cryptocloud_postback  (
+       order_id 		character varying(128),
+       invoice_id 		character varying(128),
+       amount_crypto 	double precision,
+       currency 		character varying(128),
+       status 			character varying(128)
+)

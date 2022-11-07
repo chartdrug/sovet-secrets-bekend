@@ -27,6 +27,7 @@ type Users struct {
 	Birthday       time.Time `json:"birthday"`
 	TypeSports     string    `json:"typesports"`
 	Admin          bool
+	Pay            bool
 }
 
 type UsersAdmin struct {
@@ -84,4 +85,7 @@ func (u Users) GetSex() string {
 }
 func (u Users) GetEmail() string {
 	return u.Email
+}
+func (u Users) GetPay() bool {
+	return u.Pay
 }
