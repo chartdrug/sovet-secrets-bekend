@@ -231,6 +231,7 @@ alter table injection ADD COLUMN calc boolean default false;
 alter table users ADD COLUMN admin boolean default false;
 alter table users ADD COLUMN blocked boolean default false;
 alter table users ADD COLUMN blocked_at timestamp DEFAULT CURRENT_TIMESTAMP;
+alter table users ADD COLUMN pay boolean default false;
 
 CREATE TABLE feedback (
    id uuid NOT NULL,

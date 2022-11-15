@@ -63,8 +63,8 @@ func (s service) cryptoPaymentAll(ctx context.Context, owner string) ([]entity.C
 	}
 	for y := 0; y < len(items); y++ {
 		//  по всем созданым пробегаемся и проверяем статус
-		if items[0].Statusinvoice == "created" {
-			req, errHttp := http.NewRequest("GET", "https://api.cryptocloud.plus/v1/invoice/info?uuid="+items[0].Invoiceid, nil)
+		if items[y].Statusinvoice == "created" {
+			req, errHttp := http.NewRequest("GET", "https://api.cryptocloud.plus/v1/invoice/info?uuid="+items[y].Invoiceid, nil)
 			req.Header.Set("Authorization", "Token eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MjUxNiwiZXhwIjo4ODA2NzU1ODU4Nn0.de3C_eld1kCh0Ww2VSUAYd17cIhlpQ1ZpJHoOzOPAO8")
 
 			cli := &http.Client{}
@@ -89,9 +89,9 @@ func (s service) cryptoPaymentAll(ctx context.Context, owner string) ([]entity.C
 					utils.SendMailError("cryptoPaymentAll Unmarshal", err.Error())
 
 				} else {
-					items[0].Statusinvoice = dat["status_invoice"].(string)
-					items[0].Dtpaym = time.Now()
-					errU := s.repo.UpdateCryproInvoice(ctx, items[0].Id, items[0].Statusinvoice, resp.Status+", "+string(body))
+					items[y].Statusinvoice = dat["status_invoice"].(string)
+					items[y].Dtpaym = time.Now()
+					errU := s.repo.UpdateCryproInvoice(ctx, items[y].Id, items[y].Statusinvoice, resp.Status+", "+string(body))
 					if errU != nil {
 						logger.Error("error UpdateCryproInvoice message: %s", errU.Error())
 						utils.SendMailError("UpdateCryproInvoice", errU.Error())
@@ -100,7 +100,7 @@ func (s service) cryptoPaymentAll(ctx context.Context, owner string) ([]entity.C
 
 			}
 
-			items[0].Resthttpstatus = resp.Status + ", " + string(body)
+			items[y].Resthttpstatus = resp.Status + ", " + string(body)
 		}
 	}
 	return items, nil
