@@ -42,7 +42,7 @@ import (
 var Version = "1.0.0"
 
 var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
-var brokerList = flag.String("brokerList", "89.208.219.91:9092", "broker list")
+var brokerList = flag.String("brokerList", "localhost:9092", "broker list")
 
 func main() {
 	flag.Parse()

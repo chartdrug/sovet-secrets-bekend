@@ -386,11 +386,22 @@ sudo yum install -y yum-utilssudo dnf install yum
 https://developer.confluent.io/quickstart/kafka-docker/
 
 scp -i vk_amster.pem config/kafka-compose.yml centos@89.208.219.91:/home/centos/kafka 
+docker stop zookeeper && docker rm zookeeper && docker stop broker && docker rm broker 
+docker-compose -f kafka/kafka-compose.yml up -d && docker restart centos_server_1
+новая кафка без зукипера
+scp -i vk_amster.pem config/kafka2-compose.yml centos@89.208.219.91:/home/centos/kafka 
 
 docker-compose -f kafka-compose.yml up -d
-docker-compose -f kafka/kafka-compose.yml up -d
+
+новая кафка без зукипера
+docker-compose -f kafka/kafka2-compose.yml up -d
 
 docker exec broker \
+kafka-topics --bootstrap-server broker:9092 \
+             --create \
+             --topic calc_injection
+             
+docker exec kafka_kafka1_1 \
 kafka-topics --bootstrap-server broker:9092 \
              --create \
              --topic calc_injection
