@@ -36,6 +36,7 @@ import (
 	"os"
 	//"os/signal"
 	"time"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
 )
 
 // Version indicates the current version of the application.
@@ -107,6 +108,8 @@ func main() {
 			m, err := reader.ReadMessage(context.Background())
 			if err != nil {
 				logger.Error("error while receiving message: %s", err.Error())
+				utils.SendMailError("Error reader.ReadMessage ", err.Error())
+				panic("error while receiving message:" + err.Error())
 				continue
 			}
 
