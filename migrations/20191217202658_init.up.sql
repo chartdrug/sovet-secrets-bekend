@@ -302,4 +302,17 @@ CREATE TABLE cryptocloud_postback  (
        amount_crypto 	double precision,
        currency 		character varying(128),
        status 			character varying(128)
-)
+);
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE history_update
+(
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    description_ru TEXT,
+    description_en TEXT
+);
+
+ALTER TABLE history_update
+    ADD PRIMARY KEY (id);

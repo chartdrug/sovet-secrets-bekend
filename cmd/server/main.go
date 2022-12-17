@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/historyupdate"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/payment"
 	"github.com/segmentio/kafka-go"
 	"io/ioutil"
@@ -35,8 +36,8 @@ import (
 	"net/http"
 	"os"
 	//"os/signal"
-	"time"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/utils"
+	"time"
 )
 
 // Version indicates the current version of the application.
@@ -204,6 +205,11 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.
 
 	payment.RegisterHandlers(rg.Group(""),
 		payment.NewService(payment.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
+
+	historyupdate.RegisterHandlers(rg.Group(""),
+		historyupdate.NewService(historyupdate.NewRepository(db, logger), logger),
 		authHandler, logger,
 	)
 

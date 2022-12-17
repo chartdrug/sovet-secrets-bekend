@@ -115,7 +115,7 @@ func (s service) cryptoPaymentCreate(ctx context.Context, owner jwt.MapClaims) (
 	result.Owner = owner["id"].(string)
 	result.Dt = time.Now()
 	result.Shopid = "8owDW46PDIEPfZZg"
-	result.Amount = 2.0
+	result.Amount = 5.0
 	result.Currency = "USD"
 	result.Statusinvoice = "created"
 	result.Email = owner["email"].(string)
