@@ -18,3 +18,10 @@ curl --location --request POST 'http://localhost:8080/v1/api/history_update' \
 "description_ru": "Добавлена история изменений",
 "description_en": "Added history of changes"
 }'
+
+curl --location --request POST 'https://chartdrug.com/v1/api/history_update' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+"description_ru": "Добавлен адаптивный дизайн для фармакологии",
+"description_en": "Added adaptive design for pharmacology"
+}'
