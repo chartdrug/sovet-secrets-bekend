@@ -5,7 +5,7 @@
 #VK
 #dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@213.219.213.247:5432/chatrdrug?sslmode=disable"
 #VK -amster
-dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@89.208.219.91:5432/chatrdrug?sslmode=disable"
+dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@45.8.191.170:5432/chatrdrug?sslmode=disable"
 #Amazon
 #dsn: "postgres://chatrdruguser:pgpwd4chatrdrug@35.175.222.125:5432/chatrdrug?sslmode=disable"
 jwt_signing_key: "LxsKJywDL5O5PvgODZhBH12KE6k2yL8E"

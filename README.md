@@ -234,9 +234,11 @@ docker save server:latest | bzip2 | ssh -i sovet-ZEFNmBra.pem centos@213.219.213
 docker save server:latest | bzip2 | ssh -i vk_amster.pem centos@89.208.219.91 docker load
 -- amster
 docker save server:latest | bzip2 | ssh -i amster.pem centos@89.208.219.143 docker load
-
 -- amazon
 docker save server:latest | bzip2 | ssh -i amaz.pem ec2-user@35.175.222.125 docker load
+-- Turkey
+docker save server:latest | bzip2 | ssh root@45.8.191.170 docker load
+
 
 scp -i vk_amster.pem config/server-compose.yml centos@89.208.219.91:/home/centos 
 
@@ -246,9 +248,11 @@ ssh -i sovet-ZEFNmBra.pem centos@213.219.213.247
 ssh -i vk_amster.pem centos@89.208.219.91
 -- amster
 ssh -i amster.pem ubuntu@89.208.219.143
-
 -- amaz
 ssh -i amaz.pem ec2-user@35.175.222.125
+-- Turkey
+ssh root@45.8.191.170
+Jxy8@A5442234a6l^XhI4l
 
 docker stop server 
 docker rm server
@@ -261,9 +265,9 @@ docker stop server && docker rm server && docker run -it -d --restart unless-sto
  docker network create chart
 
 ssh -i vk_amster.pem centos@89.208.219.91
-docker stop centos_server_1 && docker rm centos_server_1 && docker-compose -f server-compose.yml up -d
+docker stop root_server_1 && docker rm root_server_1 && docker-compose -f server-compose.yml up -d
 
-rm /home/centos/logs/server.log
+rm /root/logs/server.log
 docker-compose -f server-compose.yml up -d
 
 ssh -i vk_amster.pem centos@89.208.219.91 
@@ -333,12 +337,12 @@ Your key file has been saved at:
 docker exec -it server bash
 docker exec -it centos_server_1 bash
 
-tail -n 10 /home/centos/logs/server.log
+tail -n 10 /root/logs/server.log
 
 sudo cd /var/log/nginx
 
 docker images --all
-docker logs server
+docker logs root_server_1
 
 
 // POSTGRES_DB
@@ -351,6 +355,9 @@ https://habr.com/ru/post/578744/
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data -v "/absolute/path/to/directory-with-init-scripts":/docker-entrypoint-initdb.d postgres:13.3
 docker run --name habr-pg-13.3 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/absolute/path/to/directory-with-data":/var/lib/postgresql/data postgres:13.3
 docker run --name habr-pg-13.3-2 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/home/centos/pg":/var/lib/postgresql/data postgres:13.3
+
+docker run --name habr-pg-13.3 --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=chatrdruguser -e POSTGRES_PASSWORD=pgpwd4chatrdrug -e POSTGRES_DB=chatrdrug -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "/root/pg":/var/lib/postgresql/data postgres:13.3
+
 docker run -it -d --restart unless-stopped -p 5432:5432 --name habr-pg-13.3 postgres:13.3
 
 //docker run --name habr-pg-13.3 -p 5432:5432 -e POSTGRES_USER=habrpguser -e POSTGRES_PASSWORD=pgpwd4habr -e POSTGRES_DB=habrdb -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "$(pwd)":/var/lib/postgresql/data -v "$(pwd)/../2. Init Database":/docker-entrypoint-initdb.d postgres:13.3
@@ -387,7 +394,7 @@ https://developer.confluent.io/quickstart/kafka-docker/
 
 scp -i vk_amster.pem config/kafka-compose.yml centos@89.208.219.91:/home/centos/kafka 
 docker stop zookeeper && docker rm zookeeper && docker stop broker && docker rm broker 
-docker-compose -f kafka/kafka-compose.yml up -d && docker restart centos_server_1
+docker-compose -f kafka-compose.yml up -d && docker restart centos_server_1
 новая кафка без зукипера
 scp -i vk_amster.pem config/kafka2-compose.yml centos@89.208.219.91:/home/centos/kafka 
 

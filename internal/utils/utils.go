@@ -66,7 +66,7 @@ func Diff(a, b time.Time) (year, month, day, hour, min, sec int) {
 	return
 }
 
-//ex: SendMail("127.0.0.1:25", (&mail.Address{"from name", "from@example.com"}).String(), "Email Subject", "message body", []string{(&mail.Address{"to name", "to@example.com"}).String()})
+// ex: SendMail("127.0.0.1:25", (&mail.Address{"from name", "from@example.com"}).String(), "Email Subject", "message body", []string{(&mail.Address{"to name", "to@example.com"}).String()})
 func SendMail(addr, from, subject, body string, to []string) error {
 	r := strings.NewReplacer("\r\n", "", "\r", "", "\n", "", "%0a", "", "%0d", "")
 
@@ -156,7 +156,7 @@ func SendMailError(subject string, body string) {
 
 func SendMsgInjection(uids []string) {
 	w := &kafka.Writer{
-		Addr:         kafka.TCP("89.208.219.91:9092"),
+		Addr:         kafka.TCP("45.8.191.170:9092"),
 		Topic:        "calc_injection",
 		RequiredAcks: kafka.RequireAll,
 	}

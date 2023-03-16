@@ -2,11 +2,13 @@ version: '2.1'
 services:
   server:
     image: server
-    container_name: server
-    hostname: server
     network_mode: host
     volumes:
-      #- /home/centos/logs:/var/log/app
-      - /Users/kdereshev/go/src/sovet-secrets-bekend/logs/log:/var/log/app
+      - /root/logs:/var/log/app
+        #ports:
+        #- "8080:8080"
+        #extra_hosts:
+      #- "localhost:host-gateway"
     environment:
       - APP_ENV=local
+    restart: unless-stopped
