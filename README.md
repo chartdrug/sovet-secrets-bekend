@@ -385,6 +385,8 @@ sudo dnf install nginx
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
+(111: Connection refused) while connecting to
+sudo service nginx restart
 
 
 sudo yum install -y yum-utilssudo dnf install yum
