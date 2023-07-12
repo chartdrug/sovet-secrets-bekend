@@ -316,3 +316,20 @@ CREATE TABLE history_update
 
 ALTER TABLE history_update
     ADD PRIMARY KEY (id);
+
+-- для чат бота
+CREATE TABLE IF NOT EXISTS public.chats_answer
+(
+    id integer NOT NULL DEFAULT nextval('chats_answer_id_seq'::regclass),
+    answer character varying(5000) COLLATE pg_catalog."default",
+    category character varying(128) COLLATE pg_catalog."default",
+    CONSTRAINT chats_answer_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.chats_question
+(
+    id integer NOT NULL DEFAULT nextval('chats_question_id_seq'::regclass),
+    question character varying(512) COLLATE pg_catalog."default",
+    answer_id integer,
+    CONSTRAINT chats_question_pkey PRIMARY KEY (id)
+);

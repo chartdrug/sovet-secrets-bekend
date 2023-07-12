@@ -343,6 +343,7 @@ sudo cd /var/log/nginx
 
 docker images --all
 docker logs root_server_1
+docker logs root_telegrambotii2_1
 
 
 // POSTGRES_DB

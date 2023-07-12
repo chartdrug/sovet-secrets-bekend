@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/historyupdate"
 	"github.com/qiangxue/sovet-secrets-bekend/internal/payment"
+	"github.com/qiangxue/sovet-secrets-bekend/internal/tbot"
 	"github.com/segmentio/kafka-go"
 	"io/ioutil"
 	"strings"
@@ -210,6 +211,11 @@ func buildHandler(logger log.Logger, db *dbcontext.DB, db2 *sql.DB, cfg *config.
 
 	historyupdate.RegisterHandlers(rg.Group(""),
 		historyupdate.NewService(historyupdate.NewRepository(db, logger), logger),
+		authHandler, logger,
+	)
+
+	tbot.RegisterHandlers(rg.Group(""),
+		tbot.NewService(tbot.NewRepository(db, logger), logger),
 		authHandler, logger,
 	)
 
